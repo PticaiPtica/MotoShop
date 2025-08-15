@@ -1,16 +1,15 @@
-package model;
+package ru.academy.homework.motoshop.model;
 
 import jakarta.persistence.*;
 
 @Entity
-public class ProdyctImage {
+public class ProductAttribute {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    private String imageUrl;
-    private boolean isMain;
+    private String name;
 
     @ManyToOne
     @JoinColumn(name = "product_id")

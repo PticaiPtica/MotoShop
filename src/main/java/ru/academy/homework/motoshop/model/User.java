@@ -1,4 +1,4 @@
-package model;
+package ru.academy.homework.motoshop.model;
 
 
 import jakarta.persistence.*;

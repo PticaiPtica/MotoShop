@@ -1,4 +1,4 @@
-package model;
+package ru.academy.homework.motoshop.model;
 
 import jakarta.persistence.*;
 
@@ -23,7 +23,7 @@ public class Product {
     private Category category;
 
     @OneToMany(mappedBy = "product",cascade = CascadeType.ALL)
-    private List<ProdyctImage> images;
+    private List<ProductImage> images;
 
     @OneToMany(mappedBy = "product")
     private List<ProductAttribute> attributes;

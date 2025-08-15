@@ -1,7 +1,7 @@
-package model;
+package ru.academy.homework.motoshop.model;
 
 import jakarta.persistence.*;
-
+import jakarta.persistence.Entity;
 import java.util.List;
 
 @Entity
