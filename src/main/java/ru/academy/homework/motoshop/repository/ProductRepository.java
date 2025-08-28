@@ -34,4 +34,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryIdAndPriceBetween(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice);
 
     List<Product> findByQuantityGreaterThan(int i);
+
+    boolean existsByCategoryId(Long categoryId);
 }

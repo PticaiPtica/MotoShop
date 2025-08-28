@@ -7,17 +7,24 @@ import ru.academy.homework.motoshop.model.Category;
 import ru.academy.homework.motoshop.repository.CategoryRepository;
 import ru.academy.homework.motoshop.repository.ProductRepository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+/**
+ * Реализация сервиса для работы с категориями товаров
+ * Обеспечивает управление древовидной структурой категорий и связанной бизнес-логикой
+ */
 @Service
 @Transactional
 public class CategoryServiceImpl implements CategoryService {
 
+    // Репозиторий для работы с категориями
     private final CategoryRepository categoryRepository;
+    // Репозиторий для работы с товарами (для проверок связанных товаров)
     private final ProductRepository productRepository;
 
+    /**
+     * Конструктор с внедрением зависимостей
+     */
     @Autowired
     public CategoryServiceImpl(CategoryRepository categoryRepository,
                                ProductRepository productRepository) {
@@ -25,18 +32,35 @@ public class CategoryServiceImpl implements CategoryService {
         this.productRepository = productRepository;
     }
 
+    // ========== ОСНОВНЫЕ CRUD ОПЕРАЦИИ ==========
+
+    /**
+     * Получить все категории
+     * @return список всех категорий
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }
 
+    /**
+     * Найти категорию по ID
+     * @param id идентификатор категории
+     * @return Optional с категорией, если найдена
+     */
     @Override
     @Transactional(readOnly = true)
     public Optional<Category> getCategoryById(Long id) {
         return categoryRepository.findById(id);
     }
 
+    /**
+     * Создать новую категорию
+     * Проверяет родительскую категорию и циклические зависимости
+     * @param category категория для создания
+     * @return сохраненная категория
+     */
     @Override
     public Category createCategory(Category category) {
         // Проверяем родительскую категорию
@@ -54,6 +78,12 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.save(category);
     }
 
+    /**
+     * Обновить информацию о категории
+     * @param id идентификатор категории
+     * @param categoryDetails новые данные категории
+     * @return обновленная категория
+     */
     @Override
     public Category updateCategory(Long id, Category categoryDetails) {
         return categoryRepository.findById(id)
@@ -83,6 +113,12 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
     }
 
+    /**
+     * Удалить категорию
+     * Проверяет наличие товаров и перемещает подкатегории
+     * @param id идентификатор категории для удаления
+     * @throws RuntimeException если в категории есть товары
+     */
     @Override
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
@@ -104,18 +140,33 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.deleteById(id);
     }
 
+    // ========== РАБОТА С ДЕРЕВОМ КАТЕГОРИЙ ==========
+
+    /**
+     * Получить корневые категории (без родителя)
+     * @return список корневых категорий
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Category> getRootCategories() {
         return categoryRepository.findByParentCategoryIsNull();
     }
 
+    /**
+     * Получить подкатегории указанной категории
+     * @param parentId идентификатор родительской категории
+     * @return список подкатегорий
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Category> getSubcategories(Long parentId) {
         return categoryRepository.findByParentCategoryId(parentId);
     }
 
+    /**
+     * Получить полное дерево категорий с вложенностью
+     * @return дерево категорий с подкатегориями
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Category> getCategoryTree() {
@@ -123,6 +174,11 @@ public class CategoryServiceImpl implements CategoryService {
         return buildCategoryTree(rootCategories);
     }
 
+    /**
+     * Получить путь категории от корня до указанной категории
+     * @param categoryId идентификатор целевой категории
+     * @return список категорий в порядке от корня к целевой
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Category> getCategoryPath(Long categoryId) {
@@ -137,12 +193,24 @@ public class CategoryServiceImpl implements CategoryService {
         return path;
     }
 
+    // ========== СТАТИСТИКА И АНАЛИТИКА ==========
+
+    /**
+     * Получить количество товаров в конкретной категории
+     * @param categoryId идентификатор категории
+     * @return количество товаров
+     */
     @Override
     @Transactional(readOnly = true)
     public long getProductCount(Long categoryId) {
         return productRepository.countByCategoryId(categoryId);
     }
 
+    /**
+     * Получить общее количество товаров в категории включая все подкатегории
+     * @param categoryId идентификатор категории
+     * @return общее количество товаров
+     */
     @Override
     @Transactional(readOnly = true)
     public long getTotalProductCountIncludingSubcategories(Long categoryId) {
@@ -156,18 +224,37 @@ public class CategoryServiceImpl implements CategoryService {
         return count;
     }
 
+    // ========== ПОИСК И ФИЛЬТРАЦИЯ ==========
+
+    /**
+     * Поиск категорий по названию
+     * @param name часть названия для поиска
+     * @return список категорий, содержащих указанную строку в названии
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Category> searchCategoriesByName(String name) {
         return categoryRepository.findByNameContainingIgnoreCase(name);
     }
 
+    /**
+     * Получить категории, в которых есть товары
+     * @return список категорий с товарами
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Category> getCategoriesWithProducts() {
         return categoryRepository.findCategoriesWithProducts();
     }
 
+    // ========== ПРОВЕРКИ И ВАЛИДАЦИЯ ==========
+
+    /**
+     * Проверить, может ли категория быть родителем для другой категории
+     * @param categoryId идентификатор категории
+     * @param potentialParentId идентификатор потенциального родителя
+     * @return true если может быть родителем
+     */
     @Override
     @Transactional(readOnly = true)
     public boolean isValidParentCategory(Long categoryId, Long potentialParentId) {
@@ -187,19 +274,35 @@ public class CategoryServiceImpl implements CategoryService {
         return !hasCircularDependency(category, potentialParent.get());
     }
 
+    /**
+     * Проверить, есть ли товары в категории
+     * @param categoryId идентификатор категории
+     * @return true если есть товары
+     */
     @Override
     @Transactional(readOnly = true)
     public boolean categoryHasProducts(Long categoryId) {
         return productRepository.existsByCategoryId(categoryId);
     }
 
+    /**
+     * Проверить, есть ли подкатегории у категории
+     * @param categoryId идентификатор категории
+     * @return true если есть подкатегории
+     */
     @Override
     @Transactional(readOnly = true)
     public boolean categoryHasSubcategories(Long categoryId) {
         return categoryRepository.existsByParentCategoryId(categoryId);
     }
 
-    // Вспомогательные методы
+    // ========== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
+
+    /**
+     * Построить дерево категорий с вложенностью
+     * @param categories список категорий для построения дерева
+     * @return дерево категорий
+     */
     private List<Category> buildCategoryTree(List<Category> categories) {
         for (Category category : categories) {
             List<Category> subcategories = categoryRepository.findByParentCategoryId(category.getId());
@@ -208,6 +311,12 @@ public class CategoryServiceImpl implements CategoryService {
         return categories;
     }
 
+    /**
+     * Проверить наличие циклических зависимостей в дереве категорий
+     * @param category проверяемая категория
+     * @param potentialParent потенциальный родитель
+     * @return true если обнаружена циклическая зависимость
+     */
     private boolean hasCircularDependency(Category category, Category potentialParent) {
         // Проверяем, не создаст ли это циклическую зависимость
         Category current = potentialParent;
@@ -220,7 +329,14 @@ public class CategoryServiceImpl implements CategoryService {
         return false;
     }
 
-    // Дополнительные методы для бизнес-логики
+    // ========== ДОПОЛНИТЕЛЬНЫЕ МЕТОДЫ ДЛЯ БИЗНЕС-ЛОГИКИ ==========
+
+    /**
+     * Переместить категорию к новому родителю
+     * @param categoryId идентификатор перемещаемой категории
+     * @param newParentId идентификатор нового родителя (null для корня)
+     * @return обновленная категория
+     */
     public Category moveCategory(Long categoryId, Long newParentId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
@@ -241,10 +357,18 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.save(category);
     }
 
+    /**
+     * Получить конечные категории (без подкатегорий)
+     * @return список конечных категорий
+     */
     public List<Category> getLeafCategories() {
         return categoryRepository.findLeafCategories();
     }
 
+    /**
+     * Получить количество товаров для всех категорий
+     * @return Map где ключ - ID категории, значение - количество товаров
+     */
     public Map<Long, Long> getProductCountsForAllCategories() {
         List<Category> categories = categoryRepository.findAll();
         Map<Long, Long> counts = new HashMap<>();

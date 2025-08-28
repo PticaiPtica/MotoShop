@@ -15,15 +15,26 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Реализация сервиса для работы с товарами
+ * Обеспечивает полный цикл CRUD операций и бизнес-логику управления товарами
+ */
 @Service
 @Transactional
 public class ProductServiceImpl implements ProductService {
 
+    // Репозиторий для работы с товарами
     private final ProductRepository productRepository;
+    // Репозиторий для работы с изображениями товаров
     private final ProductImageRepository productImageRepository;
+    // Репозиторий для работы с атрибутами товаров
     private final ProductAttributeRepository productAttributeRepository;
+    // Сервис для работы с категориями
     private final CategoryService categoryService;
 
+    /**
+     * Конструктор с внедрением зависимостей
+     */
     @Autowired
     public ProductServiceImpl(ProductRepository productRepository,
                               ProductImageRepository productImageRepository,
@@ -35,30 +46,56 @@ public class ProductServiceImpl implements ProductService {
         this.categoryService = categoryService;
     }
 
+    // ========== ОСНОВНЫЕ CRUD ОПЕРАЦИИ ==========
+
+    /**
+     * Получить все товары (без деталей)
+     * @return список всех товаров без изображений и атрибутов
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
+    /**
+     * Получить все товары с деталями (изображения и атрибуты)
+     * @return список всех товаров с полной информацией
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Product> getAllProductsWithDetails() {
         return productRepository.findAllWithDetails();
     }
 
+    /**
+     * Найти товар по ID (без деталей)
+     * @param id идентификатор товара
+     * @return Optional с товаром, если найден
+     */
     @Override
     @Transactional(readOnly = true)
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
     }
 
+    /**
+     * Найти товар по ID с деталями (изображения и атрибуты)
+     * @param id идентификатор товара
+     * @return Optional с товаром и полной информацией, если найден
+     */
     @Override
     @Transactional(readOnly = true)
     public Optional<Product> getProductByIdWithDetails(Long id) {
         return productRepository.findByIdWithDetails(id);
     }
 
+    /**
+     * Сохранить новый товар.
+     * Устанавливает обратные ссылки для изображений и атрибутов
+     * @param product товар для сохранения
+     * @return сохраненный товар
+     */
     @Override
     public Product saveProduct(Product product) {
         // Проверяем и устанавливаем категорию
@@ -85,6 +122,12 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
 
+    /**
+     * Обновить основную информацию о товаре
+     * @param id идентификатор товара
+     * @param productDetails новые данные товара
+     * @return обновленный товар
+     */
     @Override
     public Product updateProduct(Long id, Product productDetails) {
         return productRepository.findById(id)
@@ -106,6 +149,13 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
 
+    /**
+     * Полное обновление товара с изображениями и атрибутами.
+     * Заменяет все изображения и атрибуты новыми
+     * @param id идентификатор товара
+     * @param productDetails новые данные товара
+     * @return полностью обновленный товар
+     */
     @Override
     public Product updateProductWithDetails(Long id, Product productDetails) {
         return productRepository.findById(id)
@@ -151,6 +201,12 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
 
+    /**
+     * Обновить количество товара на складе
+     * @param id идентификатор товара
+     * @param quantity новое количество
+     * @return товар с обновленным количеством
+     */
     @Override
     public Product updateProductQuantity(Long id, int quantity) {
         return productRepository.findById(id)
@@ -161,6 +217,12 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
 
+    /**
+     * Обновить цену товара
+     * @param id идентификатор товара
+     * @param price новая цена
+     * @return товар с обновленной ценой
+     */
     @Override
     public Product updateProductPrice(Long id, BigDecimal price) {
         return productRepository.findById(id)
@@ -171,6 +233,11 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
 
+    /**
+     * Удалить товар по ID.
+     * Удаляет связанные изображения и атрибуты перед удалением товара
+     * @param id идентификатор товара для удаления
+     */
     @Override
     public void deleteProduct(Long id) {
         // Сначала удаляем связанные изображения и атрибуты
@@ -181,42 +248,95 @@ public class ProductServiceImpl implements ProductService {
         productRepository.deleteById(id);
     }
 
+    // ========== ПОИСК И ФИЛЬТРАЦИЯ ==========
+
+    /**
+     * Поиск товаров по названию (без учета регистра)
+     * @param name часть названия для поиска
+     * @return список товаров, содержащих указанную строку в названии
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Product> searchProductsByName(String name) {
         return productRepository.findByNameContainingIgnoreCase(name);
     }
 
+    /**
+     * Поиск товаров в ценовом диапазоне
+     * @param minPrice минимальная цена
+     * @param maxPrice максимальная цена
+     * @return список товаров в указанном ценовом диапазоне
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Product> findProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
         return productRepository.findByPriceBetween(minPrice, maxPrice);
     }
 
+    /**
+     * Поиск товаров по категории
+     * @param categoryId идентификатор категории
+     * @return список товаров в указанной категории
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Product> findProductsByCategory(Long categoryId) {
         return productRepository.findByCategoryId(categoryId);
     }
 
+    /**
+     * Поиск товаров с низким запасом
+     * @param threshold пороговое значение количества
+     * @return список товаров, количество которых меньше порога
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Product> findLowStockProducts(int threshold) {
         return productRepository.findByQuantityLessThan(threshold);
     }
 
+    /**
+     * Поиск доступных товаров (в наличии)
+     * @return список товаров с количеством > 0
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<Product> findAvailableProducts() {
+        return productRepository.findByQuantityGreaterThan(0);
+    }
+
+    /**
+     * Поиск товаров по категории и ценовому диапазону
+     * @param categoryId идентификатор категории
+     * @param minPrice минимальная цена
+     * @param maxPrice максимальная цена
+     * @return список товаров, удовлетворяющих обоим критериям
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<Product> findProductsByCategoryAndPriceRange(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice) {
+        return productRepository.findByCategoryIdAndPriceBetween(categoryId, minPrice, maxPrice);
+    }
+
+    // ========== РАБОТА С ИЗОБРАЖЕНИЯМИ ==========
+
+    /**
+     * Получить все изображения товара
+     * @param productId идентификатор товара
+     * @return список изображений товара
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ProductImage> getProductImages(Long productId) {
         return productImageRepository.findByProductId(productId);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ProductAttribute> getProductAttributes(Long productId) {
-        return productAttributeRepository.findByProductId(productId);
-    }
-
+    /**
+     * Добавить изображение к товару
+     * @param productId идентификатор товара
+     * @param image изображение для добавления
+     * @return сохраненное изображение
+     */
     @Override
     public ProductImage addImageToProduct(Long productId, ProductImage image) {
         Product product = productRepository.findById(productId)
@@ -225,6 +345,43 @@ public class ProductServiceImpl implements ProductService {
         return productImageRepository.save(image);
     }
 
+    /**
+     * Удалить изображение у товара
+     * Проверяет, что изображение принадлежит указанному товару
+     * @param productId идентификатор товара
+     * @param imageId идентификатор изображения
+     */
+    @Override
+    @Transactional
+    public void removeImageFromProduct(Long productId, Long imageId) {
+        // Проверяем существование и принадлежность в одном запросе
+        boolean exists = productImageRepository.existsByIdAndProductId(imageId, productId);
+
+        if (!exists) {
+            throw new RuntimeException("Image not found or does not belong to the specified product");
+        }
+
+        productImageRepository.deleteById(imageId);
+    }
+    // ========== РАБОТА С АТРИБУТАМИ ==========
+
+    /**
+     * Получить все атрибуты товара
+     * @param productId идентификатор товара
+     * @return список атрибутов товара
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductAttribute> getProductAttributes(Long productId) {
+        return productAttributeRepository.findByProductId(productId);
+    }
+
+    /**
+     * Добавить атрибут к товару
+     * @param productId идентификатор товара
+     * @param attribute атрибут для добавления
+     * @return сохраненный атрибут
+     */
     @Override
     public ProductAttribute addAttributeToProduct(Long productId, ProductAttribute attribute) {
         Product product = productRepository.findById(productId)
@@ -233,42 +390,32 @@ public class ProductServiceImpl implements ProductService {
         return productAttributeRepository.save(attribute);
     }
 
+    /**
+     * Удалить атрибут у товара
+     * Проверяет, что атрибут принадлежит указанному товару
+     * @param productId идентификатор товара
+     * @param attributeId идентификатор атрибута
+     */
     @Override
-    public void removeImageFromProduct(Long productId, Long imageId) {
-        ProductImage image = productImageRepository.findById(imageId)
-                .orElseThrow(() -> new RuntimeException("Image not found with id: " + imageId));
-
-        if (!image.getProduct().getId().equals(productId)) {
-            throw new RuntimeException("Image does not belong to the specified product");
-        }
-
-        productImageRepository.deleteById(imageId);
-    }
-
-    @Override
+    @Transactional
     public void removeAttributeFromProduct(Long productId, Long attributeId) {
-        ProductAttribute attribute = productAttributeRepository.findById(attributeId)
-                .orElseThrow(() -> new RuntimeException("Attribute not found with id: " + attributeId));
+        // Проверяем существование и принадлежность в одном запросе
+        boolean exists = productAttributeRepository.existsByIdAndProductId(attributeId, productId);
 
-        if (!attribute.getProduct().getId().equals(productId)) {
-            throw new RuntimeException("Attribute does not belong to the specified product");
+        if (!exists) {
+            throw new RuntimeException("Attribute not found or does not belong to the specified product");
         }
 
         productAttributeRepository.deleteById(attributeId);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<Product> findAvailableProducts() {
-        return productRepository.findByQuantityGreaterThan(0);
-    }
+    // ========== УПРАВЛЕНИЕ ЗАПАСАМИ ==========
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<Product> findProductsByCategoryAndPriceRange(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice) {
-        return productRepository.findByCategoryIdAndPriceBetween(categoryId, minPrice, maxPrice);
-    }
-
+    /**
+     * Увеличить количество товара на указанное значение
+     * @param productId идентификатор товара
+     * @param amount количество для увеличения
+     */
     @Override
     public void increaseProductQuantity(Long productId, int amount) {
         productRepository.findById(productId)
@@ -278,6 +425,13 @@ public class ProductServiceImpl implements ProductService {
                 });
     }
 
+    /**
+     * Уменьшить количество товара на указанное значение
+     * Проверяет, что достаточно товара для уменьшения
+     * @param productId идентификатор товара
+     * @param amount количество для уменьшения
+     * @throws RuntimeException если недостаточно товара на складе
+     */
     @Override
     public void decreaseProductQuantity(Long productId, int amount) {
         productRepository.findById(productId)
