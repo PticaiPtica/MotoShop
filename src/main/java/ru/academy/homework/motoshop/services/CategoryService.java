@@ -1,6 +1,8 @@
 package ru.academy.homework.motoshop.services;
 
 
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import ru.academy.homework.motoshop.model.Category;
 
 import java.util.List;
