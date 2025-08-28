@@ -22,6 +22,7 @@ public class ProductImage {
         this.isMain = isMain;
         this.product = product;
     }
+    public ProductImage() {}
 
     public long getId() {
         return id;

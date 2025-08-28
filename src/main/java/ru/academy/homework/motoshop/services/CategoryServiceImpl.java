@@ -10,7 +10,7 @@ import ru.academy.homework.motoshop.repository.ProductRepository;
 import java.util.*;
 
 /**
- * Реализация сервиса для работы с категориями товаров
+ * Реализация сервиса для работы с категориями товаров.
  * Обеспечивает управление древовидной структурой категорий и связанной бизнес-логикой
  */
 @Service
@@ -361,6 +361,7 @@ public class CategoryServiceImpl implements CategoryService {
      * Получить конечные категории (без подкатегорий)
      * @return список конечных категорий
      */
+
     public List<Category> getLeafCategories() {
         return categoryRepository.findLeafCategories();
     }
