@@ -28,13 +28,7 @@ public class CategoryInitializer implements CommandLineRunner {
     }
 
     private void initializeCategories() {
-        // Объявляем список категорий внутри метода
-        List<String> categoryNames = Arrays.asList(
-                "Шлем", "Перчатки", "Куртка", "Штаны", "Обувь"
-        );
-
-        // Маппинг категорий к изображениям
-        Map<String, String> categoryImageMap = Map.of(
+        Map<String, String> categoryImages = Map.of(
                 "Шлем", "/images/categories/helmet.jpg",
                 "Перчатки", "/images/categories/gloves.jpg",
                 "Куртка", "/images/categories/jacket.jpg",
@@ -42,29 +36,16 @@ public class CategoryInitializer implements CommandLineRunner {
                 "Обувь", "/images/categories/boots.jpg"
         );
 
-        int createdCount = 0;
-        int existingCount = 0;
-
-        for (String categoryName : categoryNames) {
-            if (!categoryRepository.existsByName(categoryName)) {
+        for (String name : Arrays.asList("Шлем", "Перчатки", "Куртка", "Штаны", "Обувь")) {
+            if (!categoryRepository.existsByName(name)) {
                 Category category = new Category();
-                category.setName(categoryName);
-                category.setDescription("Категория товаров: " + categoryName);
+                category.setName(name);
+                category.setDescription("Описание " + name);
+                category.setImageUrl(categoryImages.get(name));
                 category.setActive(true);
-                category.setSortOrder(getSortOrder(categoryName));
-                category.setImageUrl(categoryImageMap.get(categoryName));
-
                 categoryRepository.save(category);
-                createdCount++;
-                logger.info("Создана категория: {}", categoryName);
-            } else {
-                existingCount++;
-                logger.debug("Категория уже существует: {}", categoryName);
             }
         }
-
-        logger.info("Инициализация категорий завершена. Создано: {}, Существовало: {}",
-                createdCount, existingCount);
     }
 
     private Integer getSortOrder(String categoryName) {
