@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 import ru.academy.homework.motoshop.model.Category;
 import ru.academy.homework.motoshop.repository.CategoryRepository;
 
-
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class CategoryInitializer implements CommandLineRunner {
@@ -28,8 +28,18 @@ public class CategoryInitializer implements CommandLineRunner {
     }
 
     private void initializeCategories() {
+        // Объявляем список категорий внутри метода
         List<String> categoryNames = Arrays.asList(
                 "Шлем", "Перчатки", "Куртка", "Штаны", "Обувь"
+        );
+
+        // Маппинг категорий к изображениям
+        Map<String, String> categoryImageMap = Map.of(
+                "Шлем", "/images/categories/helmet.jpg",
+                "Перчатки", "/images/categories/gloves.jpg",
+                "Куртка", "/images/categories/jacket.jpg",
+                "Штаны", "/images/categories/pants.jpg",
+                "Обувь", "/images/categories/boots.jpg"
         );
 
         int createdCount = 0;
@@ -42,10 +52,10 @@ public class CategoryInitializer implements CommandLineRunner {
                 category.setDescription("Категория товаров: " + categoryName);
                 category.setActive(true);
                 category.setSortOrder(getSortOrder(categoryName));
+                category.setImageUrl(categoryImageMap.get(categoryName));
 
                 categoryRepository.save(category);
                 createdCount++;
-
                 logger.info("Создана категория: {}", categoryName);
             } else {
                 existingCount++;
