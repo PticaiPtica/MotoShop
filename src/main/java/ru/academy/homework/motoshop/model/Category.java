@@ -12,7 +12,7 @@ import java.util.Objects;
  * Поддерживает древовидную структуру с возможностью вложенности
  */
 @Entity
-@Table(name = "categories")
+@Table(name = "category")
 public class Category {
 
     @Id
