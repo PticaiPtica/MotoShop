@@ -2,7 +2,6 @@ package ru.academy.homework.motoshop.model;
 
 import jakarta.persistence.*;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -14,8 +13,9 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Column(unique = true, nullable = false)
+    private RoleName name;
 
     @ManyToMany(mappedBy = "roles")
     private Set<User> users = new HashSet<>();
@@ -23,13 +23,14 @@ public class Role {
     // Геттеры, сеттеры и конструкторы
 
 
-
-    public Role(Long id, String name, Set<User> users) {
+    public Role(Long id, RoleName name, Set<User> users) {
         this.id = id;
         this.name = name;
         this.users = users;
     }
-    public Role() {}
+
+    public Role() {
+    }
 
     public Long getId() {
         return id;
@@ -39,42 +40,42 @@ public class Role {
         this.id = id;
     }
 
-    public String getName() {
+    public RoleName getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(RoleName name) {
         this.name = name;
+    }
+
+    public Set<User> getUsers() {
+        return users;
     }
 
     public void setUsers(Set<User> users) {
         this.users = users;
     }
 
-    public Collection<User> getUsers() {
-        return users;
+    @Override
+    public String toString() {
+        return "Role{" +
+                "id=" + id +
+                ", name=" + name +
+                ", users=" + users +
+                '}';
     }
-
 
     @Override
     public boolean equals(Object o) {
+
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Role role = (Role) o;
-        return Objects.equals(id, role.id) && Objects.equals(name, role.name) && Objects.equals(users, role.users);
+        return Objects.equals(id, role.id) && name == role.name && Objects.equals(users, role.users);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, name, users);
-    }
-
-    @Override
-    public String toString() {
-        return "Role{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", users=" + users +
-                '}';
     }
 }
