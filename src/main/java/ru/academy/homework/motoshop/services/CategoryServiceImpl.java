@@ -36,6 +36,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить все категории
+     *
      * @return список всех категорий
      */
     @Override
@@ -46,6 +47,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Найти категорию по ID
+     *
      * @param id идентификатор категории
      * @return Optional с категорией, если найдена
      */
@@ -56,8 +58,9 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     /**
-     * Создать новую категорию
+     * Создать новую категорию.
      * Проверяет родительскую категорию и циклические зависимости
+     *
      * @param category категория для создания
      * @return сохраненная категория
      */
@@ -80,7 +83,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Обновить информацию о категории
-     * @param id идентификатор категории
+     *
+     * @param id              идентификатор категории
      * @param categoryDetails новые данные категории
      * @return обновленная категория
      */
@@ -115,8 +119,9 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     /**
-     * Удалить категорию
+     * Удалить категорию.
      * Проверяет наличие товаров и перемещает подкатегории
+     *
      * @param id идентификатор категории для удаления
      * @throws RuntimeException если в категории есть товары
      */
@@ -146,6 +151,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить корневые категории (без родителя)
+     *
      * @return список корневых категорий
      */
     @Override
@@ -156,6 +162,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить подкатегории указанной категории
+     *
      * @param parentId идентификатор родительской категории
      * @return список подкатегорий
      */
@@ -167,6 +174,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить полное дерево категорий с вложенностью
+     *
      * @return дерево категорий с подкатегориями
      */
     @Override
@@ -178,6 +186,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить путь категории от корня до указанной категории
+     *
      * @param categoryId идентификатор целевой категории
      * @return список категорий в порядке от корня к целевой
      */
@@ -199,6 +208,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить количество товаров в конкретной категории
+     *
      * @param categoryId идентификатор категории
      * @return количество товаров
      */
@@ -210,6 +220,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить общее количество товаров в категории включая все подкатегории
+     *
      * @param categoryId идентификатор категории
      * @return общее количество товаров
      */
@@ -230,6 +241,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Поиск категорий по названию
+     *
      * @param name часть названия для поиска
      * @return список категорий, содержащих указанную строку в названии
      */
@@ -241,6 +253,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить категории, в которых есть товары
+     *
      * @return список категорий с товарами
      */
     @Override
@@ -253,7 +266,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Проверить, может ли категория быть родителем для другой категории
-     * @param categoryId идентификатор категории
+     *
+     * @param categoryId        идентификатор категории
      * @param potentialParentId идентификатор потенциального родителя
      * @return true если может быть родителем
      */
@@ -278,6 +292,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Проверить, есть ли товары в категории
+     *
      * @param categoryId идентификатор категории
      * @return true если есть товары
      */
@@ -289,6 +304,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Проверить, есть ли подкатегории у категории
+     *
      * @param categoryId идентификатор категории
      * @return true если есть подкатегории
      */
@@ -302,6 +318,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Построить дерево категорий с вложенностью
+     *
      * @param categories список категорий для построения дерева
      * @return дерево категорий
      */
@@ -315,7 +332,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Проверить наличие циклических зависимостей в дереве категорий
-     * @param category проверяемая категория
+     *
+     * @param category        проверяемая категория
      * @param potentialParent потенциальный родитель
      * @return true если обнаружена циклическая зависимость
      */
@@ -335,7 +353,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Переместить категорию к новому родителю
-     * @param categoryId идентификатор перемещаемой категории
+     *
+     * @param categoryId  идентификатор перемещаемой категории
      * @param newParentId идентификатор нового родителя (null для корня)
      * @return обновленная категория
      */
@@ -361,6 +380,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить конечные категории (без подкатегорий)
+     *
      * @return список конечных категорий
      */
 
@@ -370,7 +390,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * Получить количество товаров для всех категорий
-     * @return Map где ключ - ID категории, значение - количество товаров
+     *
+     * @return Map, где ключ - ID категории, значение - количество товаров
      */
     public Map<Long, Long> getProductCountsForAllCategories() {
         List<Category> categories = categoryRepository.findAll();

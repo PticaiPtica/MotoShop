@@ -7,14 +7,24 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 public class CategoryInitializer implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(CategoryInitializer.class);
+
+    private static final String HELMET = "Шлем";
+    private static final String GLOVES = "Перчатки";
+    private static final String JACKET = "Куртка";
+    private static final String PANTS = "Штаны";
+    private static final String BOOTS = "Обувь";
 
     private final CategoryRepository categoryRepository;
 
@@ -24,62 +34,115 @@ public class CategoryInitializer implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    @Transactional
+    public void run(String... args) {
+        logger.info("Starting category initialization...");
         initializeCategories();
     }
 
     private void initializeCategories() {
-        Map<String, String> categoryImages = Map.of(
-                "Шлем", "/images/categories/helmet.jpg",
-                "Перчатки", "/images/categories/gloves.jpg",
-                "Куртка", "/images/categories/jacket.jpg",
-                "Штаны", "/images/categories/pants.jpg",
-                "Обувь", "/images/categories/boots.jpg"
-        );
+        Map<String, CategoryData> categoriesData = createCategoriesData();
 
-        Map<String, String> categoryDescriptions = Map.of(
-                "Шлем", "Защитные шлемы для мотоциклистов различных типов и стилей",
-                "Перчатки", "Мотоциклетные перчатки для защиты и комфорта",
-                "Куртка", "Защитные мотоциклетные куртки с armor-вставками",
-                "Штаны", "Мотоциклетные штаны и джинсы с защитой",
-                "Обувь", "Мотоциклетные ботинки и обувь для безопасности"
-        );
+        // Получаем все существующие категории одним запросом
+        List<Category> existingCategories = categoryRepository.findAll();
+        Map<String, Category> existingCategoriesMap = existingCategories.stream()
+                .collect(Collectors.toMap(Category::getName, category -> category));
 
-        for (String name : Arrays.asList("Шлем", "Перчатки", "Куртка", "Штаны", "Обувь")) {
-            if (!categoryRepository.existsByName(name)) {
-                Category category = new Category();
-                category.setName(name);
-                category.setDescription(categoryDescriptions.get(name));
-                category.setImageUrl(categoryImages.get(name));
-                category.setActive(true);
-                category.setSortOrder(getSortOrder(name));
+        int createdCount = 0;
+        int updatedCount = 0;
 
-                categoryRepository.save(category);
-                logger.info("Created category: {} with image: {}", name, categoryImages.get(name));
+        for (Map.Entry<String, CategoryData> entry : categoriesData.entrySet()) {
+            String name = entry.getKey();
+            CategoryData data = entry.getValue();
+
+            Category existingCategory = existingCategoriesMap.get(name);
+
+            if (existingCategory == null) {
+                // Создаем новую категорию через сеттеры
+                Category newCategory = createNewCategory(name, data);
+                categoryRepository.save(newCategory);
+                createdCount++;
+                logger.debug("Created category: {}", name);
             } else {
-                // Обновляем существующие категории, если нужно
-                Category existingCategory = categoryRepository.findByName(name);
-                if (existingCategory.getImageUrl() == null) {
-                    existingCategory.setImageUrl(categoryImages.get(name));
-                    existingCategory.setDescription(categoryDescriptions.get(name));
-                    existingCategory.setSortOrder(getSortOrder(name));
-                    categoryRepository.save(existingCategory);
-                    logger.info("Updated category: {} with image: {}", name, categoryImages.get(name));
+                // Обновляем существующую категорию
+                if (updateExistingCategory(existingCategory, data)) {
+                    updatedCount++;
+                    logger.debug("Updated category: {}", name);
                 }
             }
         }
 
-        logger.info("Category initialization completed");
+        logger.info("Category initialization completed: {} created, {} updated",
+                createdCount, updatedCount);
     }
 
-    private Integer getSortOrder(String categoryName) {
-        return switch (categoryName) {
-            case "Шлем" -> 10;
-            case "Перчатки" -> 20;
-            case "Куртка" -> 30;
-            case "Штаны" -> 40;
-            case "Обувь" -> 50;
-            default -> 100;
-        };
+    private Map<String, CategoryData> createCategoriesData() {
+        Map<String, CategoryData> data = new LinkedHashMap<>();
+        data.put(HELMET, new CategoryData(
+                "/images/categories/helmet.jpg",
+                "Защитные шлемы для мотоциклистов различных типов и стилей",
+                10
+        ));
+        data.put(GLOVES, new CategoryData(
+                "/images/categories/gloves.jpg",
+                "Мотоциклетные перчатки для защиты и комфорта",
+                20
+        ));
+        data.put(JACKET, new CategoryData(
+                "/images/categories/jacket.jpg",
+                "Защитные мотоциклетные куртки с armor-вставками",
+                30
+        ));
+        data.put(PANTS, new CategoryData(
+                "/images/categories/pants.jpg",
+                "Мотоциклетные штаны и джинсы с защитой",
+                40
+        ));
+        data.put(BOOTS, new CategoryData(
+                "/images/categories/boots.jpg",
+                "Мотоциклетные ботинки и обувь для безопасности",
+                50
+        ));
+        return data;
+    }
+
+    private Category createNewCategory(String name, CategoryData data) {
+        Category category = new Category();
+        category.setName(name);
+        category.setDescription(data.description());
+        category.setImageUrl(data.imageUrl());
+        category.setActive(true);
+        category.setSortOrder(data.sortOrder());
+        return category;
+    }
+
+    private boolean updateExistingCategory(Category category, CategoryData newData) {
+        boolean needsUpdate = false;
+
+        if (!Objects.equals(newData.description(), category.getDescription())) {
+            category.setDescription(newData.description());
+            needsUpdate = true;
+        }
+
+        if (!Objects.equals(newData.imageUrl(), category.getImageUrl())) {
+            category.setImageUrl(newData.imageUrl());
+            needsUpdate = true;
+        }
+
+        if (!Objects.equals(newData.sortOrder(), category.getSortOrder())) {
+            category.setSortOrder(newData.sortOrder());
+            needsUpdate = true;
+        }
+
+        if (!category.isActive()) {
+            category.setActive(true);
+            needsUpdate = true;
+        }
+
+        return needsUpdate;
+    }
+
+    // Record для хранения данных категории
+    private record CategoryData(String imageUrl, String description, Integer sortOrder) {
     }
 }

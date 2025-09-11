@@ -13,6 +13,7 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "category")
+
 public class Category {
 
     @Id
@@ -71,10 +72,12 @@ public class Category {
         this.parentCategory = parentCategory;
     }
 
+
     // ========== БИЗНЕС-МЕТОДЫ ==========
 
     /**
      * Добавить подкатегорию
+     *
      * @param subcategory дочерняя категория
      */
     public void addSubcategory(Category subcategory) {
@@ -84,6 +87,7 @@ public class Category {
 
     /**
      * Удалить подкатегорию
+     *
      * @param subcategory дочерняя категория
      */
     public void removeSubcategory(Category subcategory) {
@@ -93,6 +97,7 @@ public class Category {
 
     /**
      * Проверить, является ли категория корневой
+     *
      * @return true если у категории нет родителя
      */
     public boolean isRoot() {
@@ -101,6 +106,7 @@ public class Category {
 
     /**
      * Проверить, является ли категория конечной (листом)
+     *
      * @return true если у категории нет подкатегорий
      */
     public boolean isLeaf() {
@@ -109,6 +115,7 @@ public class Category {
 
     /**
      * Получить уровень вложенности категории
+     *
      * @return уровень вложенности (0 для корневых)
      */
     public int getLevel() {
