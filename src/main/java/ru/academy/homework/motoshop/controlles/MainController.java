@@ -33,11 +33,6 @@ public class MainController {
     public String index(Model model) {
         List<Category> categories = categoryService.getAllCategories();
 
-        // Логируем для диагностики
-        logger.info("Loaded {} categories", categories.size());
-        for (Category category : categories) {
-            logger.info("Category: {}, Image URL: {}", category.getName(), category.getImageUrl());
-        }
 
         model.addAttribute("categories", categories);
         return "index";

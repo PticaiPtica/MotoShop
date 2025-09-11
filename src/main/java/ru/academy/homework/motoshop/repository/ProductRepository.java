@@ -15,8 +15,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // Стандартные методы
     List<Product> findByNameContainingIgnoreCase(String name);
+
     List<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
+
     List<Product> findByCategoryId(Long categoryId);
+
     List<Product> findByQuantityLessThan(int quantity);
 
     // Кастомные запросы для загрузки связанных сущностей
