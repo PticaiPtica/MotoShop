@@ -1,4 +1,4 @@
-package ru.academy.homework.motoshop.model;
+package ru.academy.homework.motoshop.entity;
 
 public enum RoleName {
     ROLE_USER,

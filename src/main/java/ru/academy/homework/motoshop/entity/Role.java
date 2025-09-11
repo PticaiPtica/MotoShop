@@ -1,4 +1,4 @@
-package ru.academy.homework.motoshop.model;
+package ru.academy.homework.motoshop.entity;
 
 import jakarta.persistence.*;
 
@@ -31,6 +31,11 @@ public class Role {
 
     public Role() {
     }
+
+    public Role(RoleName roleName) {
+        this.name = roleName;
+    }
+
 
     public Long getId() {
         return id;

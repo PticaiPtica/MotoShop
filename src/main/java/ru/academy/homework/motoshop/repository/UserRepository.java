@@ -3,7 +3,7 @@ package ru.academy.homework.motoshop.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import ru.academy.homework.motoshop.model.User;
+import ru.academy.homework.motoshop.entity.User;
 
 import java.util.Optional;
 

@@ -235,6 +235,14 @@
             <a href="#" class="cart-icon">🛒 (0)</a>
         </nav>
     </div>
+    <div th:if="${#authentication.isAuthenticated()}">
+        Welcome, <span th:text="${#authentication.name}"></span>!
+        <a th:href="@{/auth/logout}">Logout</a>
+    </div>
+    <div th:unless="${#authentication.isAuthenticated()}">
+        <a th:href="@{/auth/login}">Login</a> |
+        <a th:href="@{/auth/register}">Register</a>
+    </div>
 </header>
 
 <!-- Герой-баннер -->
