@@ -113,6 +113,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
     }
 
+
     /**
      * Удалить категорию
      * Проверяет наличие товаров и перемещает подкатегории
@@ -128,6 +129,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (categoryHasProducts(id)) {
             throw new RuntimeException("Cannot delete category with products");
         }
+
 
         // Перемещаем подкатегории на уровень выше
         if (!category.getSubcategories().isEmpty()) {
