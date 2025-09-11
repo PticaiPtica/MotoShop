@@ -136,7 +136,8 @@
         }
 
         .category-card {
-            display: block;
+            display: flex;
+            flex-direction: column;
             background: white;
             border-radius: 10px;
             overflow: hidden;
@@ -144,6 +145,7 @@
             color: #333;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            height: 100%;
         }
 
         .category-card:hover {
@@ -151,18 +153,43 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
-        .category-card img {
+        .category-image-container {
+            position: relative;
             width: 100%;
             height: 200px;
+            overflow: hidden;
+        }
+
+        .category-image {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .category-card:hover .category-image {
+            transform: scale(1.05);
+        }
+
+        .category-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex-grow: 1;
         }
 
         .category-card h3 {
-            padding: 1.5rem;
             text-align: center;
             font-family: 'Bebas Neue', cursive;
             font-size: 1.8rem;
             color: #1a1a1a;
+            margin: 0;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         /* Футер */
@@ -185,6 +212,14 @@
 
             .category-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .category-content {
+                padding: 1rem;
+            }
+
+            .category-card h3 {
+                font-size: 1.5rem;
             }
         }
     </style>
@@ -217,14 +252,15 @@
         <h2>Категории</h2>
         <div class="category-grid">
             <!-- Динамические категории из базы данных -->
-            <div th:each="category : ${categories}" class="category-card">
-                <a th:href="@{'/products?categoryId=' + ${category.id}}" style="text-decoration: none; color: inherit;">
-                    <img th:src="${category.imageUrl}"
-                         th:alt="${category.name}"
-                         onerror="this.src='/images/default-category.jpg'">
+            <a th:href="@{'/products?categoryId=' + ${category.id}}" th:each="category : ${categories}" class="category-card">
+                <div class="category-image-container">
+                    <img th:src="${category.imageUrl != null ? category.imageUrl : '/images/default-category.jpg'}"
+                         th:alt="${category.name}" class="category-image">
+                </div>
+                <div class="category-content">
                     <h3 th:text="${category.name}">Название категории</h3>
-                </a>
-            </div>
+                </div>
+            </a>
         </div>
     </div>
 </section>
