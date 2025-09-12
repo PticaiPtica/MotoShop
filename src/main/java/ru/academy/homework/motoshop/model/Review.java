@@ -1,6 +1,7 @@
 package ru.academy.homework.motoshop.model;
 
 import jakarta.persistence.*;
+import ru.academy.homework.motoshop.entity.User;
 
 @Entity
 public class Review {

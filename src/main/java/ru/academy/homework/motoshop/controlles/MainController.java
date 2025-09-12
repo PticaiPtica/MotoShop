@@ -2,6 +2,7 @@ package ru.academy.homework.motoshop.controlles;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +21,7 @@ import java.util.List;
 
 public class MainController {
 
-    private static final Logger logger = LoggerFactory.getLogger(MainController.class);
+
     private final CategoryService categoryService;
 
     @Autowired
@@ -30,11 +31,12 @@ public class MainController {
 
 
     @GetMapping("/")
-    public String index(Model model) {
-        List<Category> categories = categoryService.getAllCategories();
-
-
-        model.addAttribute("categories", categories);
+    public String home(Model model, Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            model.addAttribute("username", authentication.getName());
+            model.addAttribute("isAdmin", authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
+        }
         return "index";
     }
 }

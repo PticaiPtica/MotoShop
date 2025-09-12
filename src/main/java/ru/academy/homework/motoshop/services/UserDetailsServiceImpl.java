@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
-import ru.academy.homework.motoshop.model.User;
+import ru.academy.homework.motoshop.entity.User;
 import ru.academy.homework.motoshop.repository.UserRepository;
 
 public class UserDetailsServiceImpl implements UserDetailsService {

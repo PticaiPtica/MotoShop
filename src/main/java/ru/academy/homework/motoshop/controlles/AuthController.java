@@ -1,5 +1,6 @@
 package ru.academy.homework.motoshop.controlles;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,11 +10,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import ru.academy.homework.motoshop.config.JwtUtils;
+import ru.academy.homework.motoshop.entity.Role;
+import ru.academy.homework.motoshop.entity.User;
 import ru.academy.homework.motoshop.repository.RoleRepository;
 import ru.academy.homework.motoshop.repository.UserRepository;
 import ru.academy.homework.motoshop.services.UserDetailsImpl;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)

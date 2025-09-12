@@ -3,11 +3,12 @@ package ru.academy.homework.motoshop.services;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import ru.academy.homework.motoshop.model.User;
+import ru.academy.homework.motoshop.entity.User;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 public class UserDetailsImpl implements UserDetails {
     private static final long serialVersionUID = 1L;
@@ -40,7 +41,14 @@ public class UserDetailsImpl implements UserDetails {
                 authorities);
     }
 
-    // Implement all UserDetails methods
+    public Long getId() {
+        return id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
@@ -75,4 +83,5 @@ public class UserDetailsImpl implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+}
 }
