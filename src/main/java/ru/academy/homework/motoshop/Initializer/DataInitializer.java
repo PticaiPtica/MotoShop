@@ -24,7 +24,7 @@ public class DataInitializer implements CommandLineRunner {
             roleRepository.save(adminRole);
 
             Role moderatorRole = new Role(RoleName.ROLE_MODERATOR);
-            roleRepository.save(adminRole);
+            roleRepository.save(moderatorRole);
         }
     }
 }
