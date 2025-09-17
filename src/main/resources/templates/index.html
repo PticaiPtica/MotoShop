@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap"
           rel="stylesheet">
     <style>
+        /* Reset and base styles */
         * {
             margin: 0;
             padding: 0;
@@ -26,7 +27,12 @@
             padding: 0 20px;
         }
 
-        /* Шапка */
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* Header styles */
         .header {
             background: #1a1a1a;
             color: white;
@@ -37,7 +43,7 @@
             z-index: 1000;
         }
 
-        .header .container {
+        .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -76,7 +82,23 @@
             font-weight: bold;
         }
 
-        /* Герой-баннер */
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: 2rem;
+            color: white;
+        }
+
+        .auth-section a {
+            transition: color 0.3s ease;
+        }
+
+        .auth-section a:hover {
+            color: #ff6b35;
+        }
+
+        /* Hero section */
         .hero {
             background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/images/hero-bg.jpg');
             background-size: cover;
@@ -115,7 +137,7 @@
             background: #e55a2b;
         }
 
-        /* Категории */
+        /* Categories section */
         .categories {
             padding: 4rem 0;
             background: #f8f9fa;
@@ -192,7 +214,7 @@
             overflow: hidden;
         }
 
-        /* Футер */
+        /* Footer */
         .footer {
             background: #1a1a1a;
             color: white;
@@ -200,7 +222,22 @@
             padding: 2rem 0;
         }
 
-        /* Адаптивность */
+        /* Responsive design */
+        @media (max-width: 992px) {
+            .header-content {
+                flex-wrap: wrap;
+            }
+
+            .auth-section {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin: 1rem 0 0;
+                padding-top: 1rem;
+                border-top: 1px solid #333;
+            }
+        }
+
         @media (max-width: 768px) {
             .hero h1 {
                 font-size: 2.5rem;
@@ -221,6 +258,37 @@
             .category-card h3 {
                 font-size: 1.5rem;
             }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav {
+                width: 100%;
+                justify-content: space-between;
+                margin: 1rem 0;
+            }
+
+            .auth-section {
+                order: 0;
+                width: auto;
+                margin: 0;
+                padding: 0;
+                border: none;
+            }
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
     </style>
 </head>
@@ -228,20 +296,27 @@
 <!-- Шапка -->
 <header class="header">
     <div class="container">
-        <div class="logo">Moto<span>Gear</span></div>
-        <nav class="nav">
-            <a href="/">Главная</a>
-            <a href="/categories">Каталог</a>
-            <a href="#" class="cart-icon">🛒 (0)</a>
-        </nav>
-    </div>
-    <div th:if="${#authentication.isAuthenticated()}">
-        Welcome, <span th:text="${#authentication.name}"></span>!
-        <a th:href="@{/auth/logout}">Logout</a>
-    </div>
-    <div th:unless="${#authentication.isAuthenticated()}">
-        <a th:href="@{/auth/login}">Login</a> |
-        <a th:href="@{/auth/register}">Register</a>
+        <div class="header-content">
+            <div class="logo">Moto<span>Gear</span></div>
+            <nav class="nav">
+                <a href="/">Главная</a>
+                <a href="/categories">Каталог</a>
+                <a href="#" class="cart-icon">
+                    <span aria-hidden="true">🛒</span>
+                    <span class="sr-only">Корзина</span>
+                    <span>(0)</span>
+                </a>
+            </nav>
+            <div class="auth-section" th:if="${#authentication.isAuthenticated()}">
+                <span>Добро пожаловать, <span th:text="${#authentication.name}"></span>!</span>
+                <a th:href="@{/auth/logout}">Выйти</a>
+            </div>
+            <div class="auth-section" th:unless="${#authentication.isAuthenticated()}">
+                <a th:href="@{/auth/login}">Войти</a>
+                <span>|</span>
+                <a th:href="@{/auth/register}">Регистрация</a>
+            </div>
+        </div>
     </div>
 </header>
 
@@ -255,12 +330,13 @@
 </section>
 
 <!-- Блок категорий -->
-<section class="categories">
+<section class="categories" aria-labelledby="categories-heading">
     <div class="container">
-        <h2>Категории</h2>
+        <h2 id="categories-heading">Категории</h2>
         <div class="category-grid">
             <!-- Динамические категории из базы данных -->
-            <a th:href="@{'/products?categoryId=' + ${category.id}}" th:each="category : ${categories}" class="category-card">
+            <a th:href="@{'/products?categoryId=' + ${category.id}}" th:each="category : ${categories}"
+               class="category-card">
                 <div class="category-image-container">
                     <img th:src="${category.imageUrl != null ? category.imageUrl : '/images/default-category.jpg'}"
                          th:alt="${category.name}" class="category-image">
