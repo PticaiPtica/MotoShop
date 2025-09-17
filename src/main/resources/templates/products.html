@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoGear - Каталог товаров</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap"
+          rel="stylesheet">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #fff;
+            padding-top: 80px; /* Для фиксированного хедера */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* Header styles */
+        .header {
+            background: #1a1a1a;
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #ff6b35;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .nav a:hover {
+            color: #ff6b35;
+        }
+
+        .cart-icon {
+            background: #ff6b35;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: 2rem;
+            color: white;
+        }
+
+        .auth-section a {
+            transition: color 0.3s ease;
+        }
+
+        .auth-section a:hover {
+            color: #ff6b35;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 40px 30px;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/images/catalog-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .page-header h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            background: #ff6b35;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: #e55a2b;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        /* Stats cards */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #ff6b35;
+        }
+
+        .stat-card.low-stock {
+            border-left-color: #dc3545;
+        }
+
+        .stat-card.total {
+            border-left-color: #28a745;
+        }
+
+        .stat-number {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #ff6b35;
+            margin-bottom: 5px;
+        }
+
+        .stat-card.low-stock .stat-number {
+            color: #dc3545;
+        }
+
+        .stat-card.total .stat-number {
+            color: #28a745;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        /* Filters section */
+        .filters-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .filters-section h3 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.8rem;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .filter-input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        /* Products grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 2px solid #f1f1f1;
+        }
+
+        .product-info {
+            padding: 20px;
+        }
+
+        .product-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.3;
+            font-family: 'Bebas Neue', cursive;
+            letter-spacing: 1px;
+        }
+
+        .product-price {
+            font-size: 1.4em;
+            color: #ff6b35;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .product-quantity {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .quantity-high {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .quantity-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .quantity-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .product-category {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            padding: 5px 0;
+            border-top: 1px solid #eee;
+        }
+
+        .product-description {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+
+        /* Loading, error, no products */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            font-size: 1.3em;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+        }
+
+        .no-products {
+            text-align: center;
+            padding: 60px;
+            color: #6c757d;
+            font-size: 1.2em;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .pagination-btn {
+            padding: 10px 18px;
+            border: 2px solid #ff6b35;
+            background: white;
+            color: #ff6b35;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Roboto', sans-serif;
+            font-weight: bold;
+        }
+
+        .pagination-btn:hover {
+            background: #ff6b35;
+            color: white;
+        }
+
+        .pagination-btn.active {
+            background: #ff6b35;
+            color: white;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a1a1a;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 40px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 992px) {
+            .header-content {
+                flex-wrap: wrap;
+            }
+
+            .auth-section {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin: 1rem 0 0;
+                padding-top: 1rem;
+                border-top: 1px solid #333;
+            }
+
+            .filters-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav {
+                gap: 1rem;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav {
+                width: 100%;
+                justify-content: space-between;
+                margin: 1rem 0;
+            }
+
+            .auth-section {
+                order: 0;
+                width: auto;
+                margin: 0;
+                padding: 0;
+                border: none;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+<!-- Шапка -->
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">Moto<span>Gear</span></div>
+            <nav class="nav">
+                <a href="/">Главная</a>
+                <a href="/catalog">Каталог</a>
+                <a href="#" class="cart-icon">
+                    <span aria-hidden="true">🛒</span>
+                    <span class="sr-only">Корзина</span>
+                    <span>(0)</span>
+                </a>
+            </nav>
+            <div class="auth-section">
+                <a href="/auth/login">Войти</a>
+                <span>|</span>
+                <a href="/auth/register">Регистрация</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="page-header">
+        <h1>MotoGear</h1>
+        <p>Каталог мотоэкипировки</p>
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn btn-success" onclick="createNewProduct()">
+            ＋ Добавить новый продукт
+        </button>
+        <button class="btn" onclick="loadProducts()">
+            🔄 Обновить список
+        </button>
+        <button class="btn btn-danger" onclick="clearFilters()">
+            🗑️ Очистить фильтры
+        </button>
+    </div>
+
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <div class="stat-number" id="total-products">0</div>
+            <div class="stat-label">Всего продуктов</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="total-stock">0</div>
+            <div class="stat-label">Общее количество</div>
+        </div>
+        <div class="stat-card low-stock">
+            <div class="stat-number" id="low-stock-count">0</div>
+            <div class="stat-label">Низкий запас</div>
+        </div>
+    </div>
+
+    <div class="filters-section">
+        <h3>Фильтры и поиск</h3>
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="search-name">Поиск по названию</label>
+                <input type="text" id="search-name" class="filter-input" placeholder="Введите название..."
+                       oninput="debouncedSearch()">
+            </div>
+
+            <div class="filter-group">
+                <label for="min-price">Цена от</label>
+                <input type="number" id="min-price" class="filter-input" placeholder="Мин. цена"
+                       oninput="debouncedSearch()">
+            </div>
+
+            <div class="filter-group">
+                <label for="max-price">Цена до</label>
+                <input type="number" id="max-price" class="filter-input" placeholder="Макс. цена"
+                       oninput="debouncedSearch()">
+            </div>
+
+            <div class="filter-group">
+                <label for="category-filter">Категория</label>
+                <select id="category-filter" class="filter-input" onchange="debouncedSearch()">
+                    <option value="">Все категории</option>
+                    <!-- Категории будут загружены динамически -->
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="stock-filter">Наличие</label>
+                <select id="stock-filter" class="filter-input" onchange="debouncedSearch()">
+                    <option value="">Все товары</option>
+                    <option value="low">Низкий запас (&lt;10)</option>
+                    <option value="in-stock">В наличии</option>
+                    <option value="out-of-stock">Нет в наличии</option>
+                </select>
+            </div>
+
+            <button class="btn" onclick="applyFilters()">
+                🔍 Применить фильтры
+            </button>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">
+        Загрузка продуктов...
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div id="products-container">
+        <div id="products-grid" class="products-grid"></div>
+        <div id="no-products" class="no-products" style="display: none;">
+            Продукты не найдены. Попробуйте изменить параметры поиска.
+        </div>
+    </div>
+
+    <div class="pagination" id="pagination" style="display: none;"></div>
+</div>
+
+<!-- Футер -->
+<footer class="footer">
+    <div class="container">
+        <p>© 2025 MotoGear. Все права защищены.</p>
+    </div>
+</footer>
+
+<script>
+    let allProducts = [];
+    let currentPage = 1;
+    const productsPerPage = 12;
+    let debounceTimer;
+
+    // Функция для получения параметров из URL
+    function getUrlParams() {
+        const params = {};
+        const queryString = window.location.search.substring(1);
+        const regex = /([^&=]+)=([^&]*)/g;
+        let match;
+
+        while (match = regex.exec(queryString)) {
+            params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+        }
+
+        return params;
+    }
+
+    // Загрузка при старте
+    document.addEventListener('DOMContentLoaded', function () {
+        // Проверяем параметры URL перед загрузкой продуктов
+        const urlParams = getUrlParams();
+
+        // Если есть параметр categoryId, устанавливаем его в фильтр
+        if (urlParams.categoryId) {
+            // Загружаем категории сначала, чтобы установить фильтр
+            loadCategories().then(() => {
+                document.getElementById('category-filter').value = urlParams.categoryId;
+                loadProducts();
+            });
+        } else {
+            // Если параметра нет, просто загружаем продукты и категории
+            loadProducts();
+            loadCategories();
+        }
+    });
+
+    function debouncedSearch() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(applyFilters, 500);
+    }
+
+    async function loadProducts() {
+        showLoading();
+        hideError();
+
+        try {
+            const response = await fetch('/api/products');
+
+            if (!response.ok) {
+                throw new Error('Ошибка загрузки продуктов');
+            }
+
+            allProducts = await response.json();
+            displayProducts(allProducts);
+            updateStats(allProducts);
+
+        } catch (error) {
+            showError('Ошибка при загрузке продуктов: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function loadCategories() {
+        try {
+            // Предполагаем, что у вас есть API для категорий
+            const response = await fetch('/api/categories');
+            if (response.ok) {
+                const categories = await response.json();
+                const categorySelect = document.getElementById('category-filter');
+
+                // Очищаем существующие опции, кроме первой
+                while (categorySelect.options.length > 1) {
+                    categorySelect.remove(1);
+                }
+
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+
+                // После загрузки категорий проверяем URL параметры
+                const urlParams = getUrlParams();
+                if (urlParams.categoryId) {
+                    categorySelect.value = urlParams.categoryId;
+                    // Применяем фильтры после установки значения
+                    applyFilters();
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки категорий:', error);
+        }
+    }
+
+    function applyFilters() {
+        const searchName = document.getElementById('search-name').value.toLowerCase();
+        const minPrice = document.getElementById('min-price').value ?
+            parseFloat(document.getElementById('min-price').value) : null;
+        const maxPrice = document.getElementById('max-price').value ?
+            parseFloat(document.getElementById('max-price').value) : null;
+        const categoryId = document.getElementById('category-filter').value;
+        const stockFilter = document.getElementById('stock-filter').value;
+
+        let filteredProducts = allProducts.filter(product => {
+            // Фильтр по названию
+            if (searchName && !product.name.toLowerCase().includes(searchName)) {
+                return false;
+            }
+
+            // Фильтр по цене
+            if (minPrice !== null && product.price < minPrice) return false;
+            if (maxPrice !== null && product.price > maxPrice) return false;
+
+            // Фильтр по категории
+            if (categoryId && (!product.category || product.category.id != categoryId)) {
+                return false;
+            }
+
+            // Фильтр по наличию
+            if (stockFilter === 'low' && product.quantity >= 10) return false;
+            if (stockFilter === 'in-stock' && product.quantity === 0) return false;
+            if (stockFilter === 'out-of-stock' && product.quantity > 0) return false;
+
+            return true;
+        });
+
+        displayProducts(filteredProducts);
+        updateStats(filteredProducts);
+    }
+
+    function displayProducts(products) {
+        const productsGrid = document.getElementById('products-grid');
+        const noProducts = document.getElementById('no-products');
+        const pagination = document.getElementById('pagination');
+
+        productsGrid.innerHTML = '';
+
+        if (products.length === 0) {
+            noProducts.style.display = 'block';
+            pagination.style.display = 'none';
+            return;
+        }
+
+        noProducts.style.display = 'none';
+
+        // Пагинация
+        const totalPages = Math.ceil(products.length / productsPerPage);
+        currentPage = Math.min(currentPage, totalPages);
+
+        displayPagination(totalPages);
+
+        const startIndex = (currentPage - 1) * productsPerPage;
+        const endIndex = Math.min(startIndex + productsPerPage, products.length);
+        const pageProducts = products.slice(startIndex, endIndex);
+
+        pageProducts.forEach(product => {
+            const productCard = createProductCard(product);
+            productsGrid.appendChild(productCard);
+        });
+    }
+
+    function createProductCard(product) {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.onclick = () => viewProduct(product.id);
+
+        // Получаем первое изображение или используем заглушку
+        const imageUrl = product.images && product.images.length > 0 ?
+            product.images[0].imageUrl : '/placeholder-product.jpg';
+
+        // Определяем класс для количества
+        let quantityClass = 'quantity-high';
+        let quantityText = `В наличии: ${product.quantity} шт.`;
+
+        if (product.quantity === 0) {
+            quantityClass = 'quantity-low';
+            quantityText = 'Нет в наличии';
+        } else if (product.quantity < 10) {
+            quantityClass = 'quantity-low';
+            quantityText = `Мало: ${product.quantity} шт.`;
+        } else if (product.quantity < 50) {
+            quantityClass = 'quantity-medium';
+        }
+
+        card.innerHTML = `
+                <img src="${imageUrl}" alt="${product.name}" class="product-image"
+                     onerror="this.src='/placeholder-product.jpg'">
+
+                <div class="product-info">
+                    <h3 class="product-title">${product.name}</h3>
+                    <div class="product-price">${formatPrice(product.price)}</div>
+                    <span class="product-quantity ${quantityClass}">${quantityText}</span>
+
+                    ${product.category ? `
+                        <div class="product-category">
+                            Категория: ${product.category.name}
+                        </div>
+                    ` : ''}
+
+                    ${product.description ? `
+                        <p class="product-description">${product.description}</p>
+                    ` : ''}
+                </div>
+
+                <div class="card-actions">
+                    <button class="btn btn-sm" onclick="event.stopPropagation(); viewProduct(${product.id})">
+                        👁️ Просмотр
+                    </button>
+                    <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); editProduct(${product.id})">
+                        ✏️ Редактировать
+                    </button>
+                </div>
+            `;
+
+        return card;
+    }
+
+    function displayPagination(totalPages) {
+        const pagination = document.getElementById('pagination');
+
+        if (totalPages <= 1) {
+            pagination.style.display = 'none';
+            return;
+        }
+
+        pagination.style.display = 'flex';
+        pagination.innerHTML = '';
+
+        // Кнопка "Назад"
+        if (currentPage > 1) {
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'pagination-btn';
+            prevBtn.innerHTML = '←';
+            prevBtn.onclick = () => changePage(currentPage - 1);
+            pagination.appendChild(prevBtn);
+        }
+
+        // Нумерация страниц
+        for (let i = 1; i <= totalPages; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = 'pagination-btn';
+            if (i === currentPage) pageBtn.classList.add('active');
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => changePage(i);
+            pagination.appendChild(pageBtn);
+        }
+
+        // Кнопка "Вперед"
+        if (currentPage < totalPages) {
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'pagination-btn';
+            nextBtn.innerHTML = '→';
+            nextBtn.onclick = () => changePage(currentPage + 1);
+            pagination.appendChild(nextBtn);
+        }
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        applyFilters();
+        window.scrollTo(0, 0);
+    }
+
+    function updateStats(products) {
+        const totalProducts = products.length;
+        const totalStock = products.reduce((sum, product) => sum + product.quantity, 0);
+        const lowStockCount = products.filter(product => product.quantity > 0 && product.quantity < 10).length;
+
+        document.getElementById('total-products').textContent = totalProducts;
+        document.getElementById('total-stock').textContent = totalStock;
+        document.getElementById('low-stock-count').textContent = lowStockCount;
+    }
+
+    function formatPrice(price) {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB'
+        }).format(price);
+    }
+
+    function clearFilters() {
+        document.getElementById('search-name').value = '';
+        document.getElementById('min-price').value = '';
+        document.getElementById('max-price').value = '';
+        document.getElementById('category-filter').value = '';
+        document.getElementById('stock-filter').value = '';
+
+        // Очищаем параметр categoryId из URL
+        const url = new URL(window.location);
+        url.searchParams.delete('categoryId');
+        window.history.replaceState({}, '', url);
+
+        applyFilters();
+    }
+
+    function viewProduct(productId) {
+        window.location.href = `product.html?id=${productId}`;
+    }
+
+    function editProduct(productId) {
+        alert('Редактирование продукта ' + productId);
+        // window.location.href = `edit-product.html?id=${productId}`;
+    }
+
+    function createNewProduct() {
+        alert('Создание нового продукта');
+        // window.location.href = 'create-product.html';
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+
+    function hideError() {
+        document.getElementById('error').style.display = 'none';
+    }
+
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('products-container').style.display = 'none';
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('products-container').style.display = 'block';
+    }
+</script>
+</body>
+</html>
