@@ -117,7 +117,6 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
     }
 
-
     /**
      * Удалить категорию.
      * Проверяет наличие товаров и перемещает подкатегории
@@ -126,7 +125,7 @@ public class CategoryServiceImpl implements CategoryService {
      * @throws RuntimeException если в категории есть товары
      */
     @Override
-    public void deleteCategory(Long id) {
+    public void deleteById(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
@@ -134,7 +133,6 @@ public class CategoryServiceImpl implements CategoryService {
         if (categoryHasProducts(id)) {
             throw new RuntimeException("Cannot delete category with products");
         }
-
 
         // Перемещаем подкатегории на уровень выше
         if (!category.getSubcategories().isEmpty()) {
@@ -145,6 +143,50 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         categoryRepository.deleteById(id);
+    }
+
+    // ========== ДОБАВЛЕННЫЕ CRUD МЕТОДЫ ==========
+
+    /**
+     * Найти все категории.
+     * Аналог метода {@link #getAllCategories()}.
+     *
+     * @return список всех категорий
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<Category> findAll() {
+        return categoryRepository.findAll();
+    }
+
+    /**
+     * Найти категорию по идентификатору.
+     * Аналог метода {@link #getCategoryById(Long)}.
+     *
+     * @param id идентификатор категории
+     * @return категория в виде {@link Optional}
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Category> findById(Long id) {
+        return categoryRepository.findById(id);
+    }
+
+    /**
+     * Сохранить категорию (создать или обновить существующую).
+     *
+     * @param category категория для сохранения
+     * @return сохраненная категория
+     */
+    @Override
+    public Category save(Category category) {
+        if (category.getId() == null) {
+            // Создание новой категории
+            return createCategory(category);
+        } else {
+            // Обновление существующей категории
+            return updateCategory(category.getId(), category);
+        }
     }
 
     // ========== РАБОТА С ДЕРЕВОМ КАТЕГОРИЙ ==========
@@ -177,6 +219,8 @@ public class CategoryServiceImpl implements CategoryService {
      *
      * @return дерево категорий с подкатегориями
      */
+
+
     @Override
     @Transactional(readOnly = true)
     public List<Category> getCategoryTree() {
@@ -383,7 +427,6 @@ public class CategoryServiceImpl implements CategoryService {
      *
      * @return список конечных категорий
      */
-
     public List<Category> getLeafCategories() {
         return categoryRepository.findLeafCategories();
     }
@@ -402,5 +445,69 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         return counts;
+    }
+
+    /**
+     * Найти категории по списку идентификаторов
+     *
+     * @param ids список идентификаторов категорий
+     * @return список найденных категорий
+     */
+    public List<Category> findAllById(Iterable<Long> ids) {
+        return categoryRepository.findAllById(ids);
+    }
+
+    /**
+     * Проверить существование категории по идентификатору
+     *
+     * @param id идентификатор категории
+     * @return true если категория существует
+     */
+    public boolean existsById(Long id) {
+        return categoryRepository.existsById(id);
+    }
+
+    /**
+     * Получить общее количество категорий
+     *
+     * @return количество категорий
+     */
+    public long count() {
+        return categoryRepository.count();
+    }
+
+    /**
+     * Удалить все категории (использовать с осторожностью)
+     */
+    public void deleteAll() {
+        categoryRepository.deleteAll();
+    }
+
+    /**
+     * Удалить категорию по объекту
+     *
+     * @param category категория для удаления
+     */
+    public void delete(Category category) {
+        categoryRepository.delete(category);
+    }
+
+    /**
+     * Удалить категории по списку
+     *
+     * @param categories список категорий для удаления
+     */
+    public void deleteAll(Iterable<? extends Category> categories) {
+        categoryRepository.deleteAll(categories);
+    }
+
+    /**
+     * Сохранить список категорий
+     *
+     * @param categories список категорий для сохранения
+     * @return список сохраненных категорий
+     */
+    public List<Category> saveAll(Iterable<Category> categories) {
+        return categoryRepository.saveAll(categories);
     }
 }

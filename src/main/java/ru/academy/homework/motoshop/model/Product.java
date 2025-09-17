@@ -105,4 +105,7 @@ public class Product {
     public void setAttributes(List<ProductAttribute> attributes) {
         this.attributes = attributes;
     }
+
+    public void setRating(Double newRating) {
+    }
 }
