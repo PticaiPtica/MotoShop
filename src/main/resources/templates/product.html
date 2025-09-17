@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoShop - Детали продукта</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .header h1 {
+            color: #007bff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: #5a6268;
+        }
+
+        .product-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .product-details {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .product-images {
+            position: relative;
+        }
+
+        .main-image {
+            width: 100%;
+            height: 400px;
+            object-fit: contain;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+
+        .thumbnail-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .thumbnail:hover {
+            border-color: #007bff;
+        }
+
+        .product-info {
+            padding: 20px;
+        }
+
+        .product-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .product-price {
+            font-size: 1.8em;
+            color: #007bff;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .product-quantity {
+            font-size: 1.1em;
+            color: #28a745;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+
+        .low-stock {
+            color: #dc3545;
+            border-left-color: #dc3545;
+        }
+
+        .product-description {
+            margin-bottom: 25px;
+            line-height: 1.8;
+            color: #666;
+        }
+
+        .product-category {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .attributes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .attribute-card {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .attribute-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .attribute-value {
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>MotoShop</h1>
+        <p>Интернет-магазин мототоваров</p>
+    </div>
+
+    <a href="javascript:history.back()" class="back-button">← Назад</a>
+
+    <div id="loading" class="loading">
+        Загрузка данных о продукте...
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div id="product-content" style="display: none;">
+        <div class="product-details">
+            <div class="product-images">
+                <img id="main-image" class="main-image" src="" alt="Изображение продукта">
+                <h3 class="section-title">Галерея изображений</h3>
+                <div id="thumbnails" class="thumbnail-container"></div>
+            </div>
+
+            <div class="product-info">
+                <h2 id="product-title" class="product-title"></h2>
+                <div id="product-price" class="product-price"></div>
+                <div id="product-quantity" class="product-quantity"></div>
+
+                <h3 class="section-title">Описание</h3>
+                <p id="product-description" class="product-description"></p>
+
+                <div id="product-category" class="product-category"></div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="editProduct()">Редактировать</button>
+                    <button class="btn btn-danger" onclick="deleteProduct()">Удалить</button>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="section-title">Характеристики</h3>
+        <div id="attributes-container">
+            <div id="attributes-grid" class="attributes-grid"></div>
+            <div id="no-attributes" class="no-data" style="display: none;">
+                Характеристики не добавлены
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Получаем ID продукта из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
+
+    if (!productId) {
+        showError('ID продукта не указан в URL');
+        hideLoading();
+    } else {
+        // Загружаем данные о продукте
+        fetchProductData(productId);
+    }
+
+    async function fetchProductData(id) {
+        try {
+            const response = await fetch(`/api/products/${id}`);
+
+            if (!response.ok) {
+                throw new Error('Продукт не найден');
+            }
+
+            const product = await response.json();
+            displayProductData(product);
+
+        } catch (error) {
+            showError('Ошибка при загрузке данных: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function displayProductData(product) {
+        // Основная информация
+        document.getElementById('product-title').textContent = product.name;
+        document.getElementById('product-price').textContent = formatPrice(product.price);
+        document.getElementById('product-description').textContent = product.description || 'Описание отсутствует';
+
+        // Количество
+        const quantityElement = document.getElementById('product-quantity');
+        quantityElement.textContent = `В наличии: ${product.quantity} шт.`;
+        if (product.quantity < 10) {
+            quantityElement.classList.add('low-stock');
+        }
+
+        // Категория
+        const categoryElement = document.getElementById('product-category');
+        if (product.category) {
+            categoryElement.innerHTML = `<strong>Категория:</strong> ${product.category.name || 'Без категории'}`;
+        } else {
+            categoryElement.innerHTML = '<strong>Категория:</strong> Не указана';
+        }
+
+        // Изображения
+        const mainImage = document.getElementById('main-image');
+        const thumbnailsContainer = document.getElementById('thumbnails');
+
+        if (product.images && product.images.length > 0) {
+            mainImage.src = product.images[0].imageUrl || '/placeholder-image.jpg';
+
+            product.images.forEach((image, index) => {
+                const img = document.createElement('img');
+                img.src = image.imageUrl || '/placeholder-image.jpg';
+                img.alt = `Изображение ${index + 1}`;
+                img.className = 'thumbnail';
+                img.onclick = () => mainImage.src = image.imageUrl;
+                thumbnailsContainer.appendChild(img);
+            });
+        } else {
+            mainImage.src = '/placeholder-image.jpg';
+            thumbnailsContainer.innerHTML = '<div class="no-data">Изображения отсутствуют</div>';
+        }
+
+        // Атрибуты
+        const attributesGrid = document.getElementById('attributes-grid');
+        const noAttributes = document.getElementById('no-attributes');
+
+        if (product.attributes && product.attributes.length > 0) {
+            attributesGrid.innerHTML = '';
+            product.attributes.forEach(attr => {
+                const attributeCard = document.createElement('div');
+                attributeCard.className = 'attribute-card';
+                attributeCard.innerHTML = `
+                        <div class="attribute-name">${attr.name || 'Без названия'}</div>
+                        <div class="attribute-value">${attr.value || 'Не указано'}</div>
+                    `;
+                attributesGrid.appendChild(attributeCard);
+            });
+            noAttributes.style.display = 'none';
+        } else {
+            attributesGrid.innerHTML = '';
+            noAttributes.style.display = 'block';
+        }
+
+        // Показываем контент
+        document.getElementById('product-content').style.display = 'block';
+    }
+
+    function formatPrice(price) {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB'
+        }).format(price);
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    function editProduct() {
+        alert('Функция редактирования будет реализована позже');
+        // window.location.href = `/edit-product.html?id=${productId}`;
+    }
+
+    async function deleteProduct() {
+        if (confirm('Вы уверены, что хотите удалить этот продукт?')) {
+            try {
+                const response = await fetch(`/api/products/${productId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Продукт успешно удален');
+                    window.location.href = '/products.html';
+                } else {
+                    throw new Error('Ошибка при удалении');
+                }
+            } catch (error) {
+                alert('Ошибка при удалении продукта: ' + error.message);
+            }
+        }
+    }
+</script>
+</body>
+</html>
