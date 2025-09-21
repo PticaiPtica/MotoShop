@@ -1,117 +1,151 @@
 package ru.academy.homework.motoshop.controlles;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.academy.homework.motoshop.config.JwtUtils;
-import ru.academy.homework.motoshop.entity.Role;
-import ru.academy.homework.motoshop.entity.RoleName;
 import ru.academy.homework.motoshop.entity.User;
 import ru.academy.homework.motoshop.payload.JwtResponse;
 import ru.academy.homework.motoshop.payload.MessageResponse;
 import ru.academy.homework.motoshop.payload.request.LoginRequest;
-import ru.academy.homework.motoshop.payload.request.SignupRequest;
-import ru.academy.homework.motoshop.repository.RoleRepository;
-import ru.academy.homework.motoshop.repository.UserRepository;
 import ru.academy.homework.motoshop.services.UserDetailsImpl;
+import ru.academy.homework.motoshop.services.UserService;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
-@RestController
+@Controller
 @RequestMapping("/api/auth")
 public class AuthController {
+    private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    public AuthController(UserService userService,
+                          AuthenticationManager authenticationManager,
+                          JwtUtils jwtUtils) {
+        this.userService = userService;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtils = jwtUtils;
+    }
 
-    @Autowired
-    private UserRepository userRepository;
+    @GetMapping("/login")
+    public String loginPage(@RequestParam(value = "error", required = false) String error,
+                            @RequestParam(value = "registered", required = false) String registered,
+                            Model model) {
+        if (error != null) {
+            model.addAttribute("error", "Неверное имя пользователя или пароль");
+        }
+        if (registered != null) {
+            model.addAttribute("message", "Регистрация успешна! Теперь вы можете войти.");
+        }
+        return "login";
+    }
 
-    @Autowired
-    private RoleRepository roleRepository;
+    @GetMapping("/register")
+    public String registerPage(Model model) {
+        model.addAttribute("user", new UserRegistrationDto());
+        return "register";
+    }
 
-    @Autowired
-    private PasswordEncoder encoder;
+    @PostMapping("/register")
+    public String registerUser(@Valid @ModelAttribute("user") UserRegistrationDto registrationDto,
+                               BindingResult result,
+                               Model model) {
+        if (result.hasErrors()) {
+            return "register";
+        }
 
-    @Autowired
-    private JwtUtils jwtUtils;
+        // Проверка на существование пользователя с таким же username или email
+        if (userService.existsByUsername(registrationDto.getUsername())) {
+            model.addAttribute("error", "Пользователь с таким именем уже существует");
+            return "register";
+        }
+
+        if (userService.existsByEmail(registrationDto.getEmail())) {
+            model.addAttribute("error", "Пользователь с таким email уже существует");
+            return "register";
+        }
+
+        try {
+            userService.registerUser(
+                    registrationDto.getUsername(),
+                    registrationDto.getEmail(),
+                    registrationDto.getPassword()
+            );
+            return "redirect:/api/auth/login?registered=true";
+        } catch (RuntimeException e) {
+            model.addAttribute("error", "Ошибка при регистрации: " + e.getMessage());
+            return "register";
+        }
+    }
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(authentication);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User user = userService.findByUsername(userDetails.getUsername());
 
-        return ResponseEntity.ok(new JwtResponse(jwt,
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                roles));
+            return ResponseEntity.ok(new JwtResponse(jwt, user));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("Неверное имя пользователя или пароль"));
+        }
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
+    // DTO для регистрации
+    public static class UserRegistrationDto {
+        @NotBlank(message = "Имя пользователя обязательно")
+        @Size(min = 3, max = 20, message = "Имя пользователя должно содержать от 3 до 20 символов")
+        private String username;
+
+        @NotBlank(message = "Пароль обязателен")
+        @Size(min = 6, message = "Пароль должен содержать не менее 6 символов")
+        private String password;
+
+        @NotBlank(message = "Email обязателен")
+        @Email(message = "Некорректный email")
+        private String email;
+
+        // Геттеры и сеттеры
+        public String getUsername() {
+            return username;
         }
 
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
+        public void setUsername(String username) {
+            this.username = username;
         }
 
-        User user = new User(signUpRequest.getUsername(),
-                signUpRequest.getEmail(),
-                encoder.encode(signUpRequest.getPassword()));
-
-        Set<String> strRoles = signUpRequest.getRole();
-        Set<Role> roles = new HashSet<>();
-
-        if (strRoles == null) {
-            Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-            roles.add(userRole);
-        } else {
-            strRoles.forEach(role -> {
-                switch (role) {
-                    case "admin":
-                        Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(adminRole);
-                        break;
-                    case "mod":
-                        Role modRole = roleRepository.findByName(RoleName.ROLE_MODERATOR)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(modRole);
-                        break;
-                    default:
-                        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(userRole);
-                }
-            });
+        public String getPassword() {
+            return password;
         }
 
-        user.setRoles(roles);
-        userRepository.save(user);
+        public void setPassword(String password) {
+            this.password = password;
+        }
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
     }
 }

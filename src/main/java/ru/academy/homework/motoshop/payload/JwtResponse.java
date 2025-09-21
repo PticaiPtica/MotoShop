@@ -1,5 +1,8 @@
 package ru.academy.homework.motoshop.payload;
 
+import ru.academy.homework.motoshop.entity.User;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class JwtResponse {
@@ -16,6 +19,15 @@ public class JwtResponse {
         this.username = username;
         this.email = email;
         this.roles = roles;
+    }
+
+    public JwtResponse(String jwt, User user) {
+        this.token = jwt;
+        this.id = user.getId();
+        this.username = user.getUsername();
+        this.email = user.getEmail();
+        this.roles = new ArrayList<>();
+
     }
 
     public String getToken() {

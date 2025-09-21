@@ -111,8 +111,8 @@ public class CategoryInitializer implements CommandLineRunner {
         category.setName(name);
         category.setDescription(data.description());
         category.setImageUrl(data.imageUrl());
-        category.setActive(true);
-        category.setSortOrder(data.sortOrder());
+
+
         return category;
     }
 
@@ -129,15 +129,6 @@ public class CategoryInitializer implements CommandLineRunner {
             needsUpdate = true;
         }
 
-        if (!Objects.equals(newData.sortOrder(), category.getSortOrder())) {
-            category.setSortOrder(newData.sortOrder());
-            needsUpdate = true;
-        }
-
-        if (!category.isActive()) {
-            category.setActive(true);
-            needsUpdate = true;
-        }
 
         return needsUpdate;
     }

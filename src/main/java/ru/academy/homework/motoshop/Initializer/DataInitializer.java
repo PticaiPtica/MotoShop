@@ -1,30 +1,31 @@
 package ru.academy.homework.motoshop.Initializer;
 
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import ru.academy.homework.motoshop.entity.Role;
 import ru.academy.homework.motoshop.entity.RoleName;
 import ru.academy.homework.motoshop.repository.RoleRepository;
+import ru.academy.homework.motoshop.repository.UserRepository;
 
 @Component
-public class DataInitializer implements CommandLineRunner {
+public class DataInitializer {
+    private final RoleRepository roleRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
+    public DataInitializer(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
+    }
 
-    @Override
-    public void run(String... args) throws Exception {
-        if (roleRepository.count() == 0) {
-            Role userRole = new Role(RoleName.ROLE_USER);
-            roleRepository.save(userRole);
-
-            Role adminRole = new Role(RoleName.ROLE_ADMIN);
-            roleRepository.save(adminRole);
-
-            Role moderatorRole = new Role(RoleName.ROLE_MODERATOR);
-            roleRepository.save(moderatorRole);
+    @PostConstruct
+    public void init() {
+        for (RoleName roleName : RoleName.values()) {
+            if (roleRepository.findByName(roleName).isEmpty()) {
+                Role role = new Role();
+                role.setName(roleName);
+                roleRepository.save(role);
+            }
         }
     }
 }

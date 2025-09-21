@@ -1,63 +1,341 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход в MotoShop</title>
+    <title>Вход в MotoGear</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* Header styles */
+        .header {
+            background: #1a1a1a;
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #ff6b35;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .nav a:hover {
+            color: #ff6b35;
+        }
+
+        .cart-icon {
+            background: #ff6b35;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: 2rem;
+            color: white;
+        }
+
+        .auth-section a {
+            transition: color 0.3s ease;
+        }
+
+        .auth-section a:hover {
+            color: #ff6b35;
+        }
+
+        /* Main content */
+        .main-content {
+            margin-top: 120px;
+            min-height: calc(100vh - 200px);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            padding: 2rem 0;
         }
+
         .login-container {
             background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            padding: 2.5rem;
+            margin: 0 1rem;
         }
-        h2 {
+
+        .login-header {
             text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2.5rem;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
             color: #333;
         }
-        input {
+
+        .form-control {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
+            padding: 12px 15px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
         }
-        button {
+
+        .form-control:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        .btn {
+            display: block;
             width: 100%;
-            padding: 10px;
-            background: #007bff;
+            background: #ff6b35;
             color: white;
+            padding: 1rem;
+            text-align: center;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.1rem;
             cursor: pointer;
+            transition: background 0.3s ease;
         }
-        button:hover {
-            background: #0056b3;
+
+        .btn:hover {
+            background: #e55a2b;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+
+        .form-footer a {
+            color: #ff6b35;
+            font-weight: bold;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 5px;
+        }
+
+        .alert-error {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+        }
+
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #388e3c;
+            border: 1px solid #c8e6c9;
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .toggle-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #777;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a1a1a;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav {
+                width: 100%;
+                justify-content: space-between;
+                margin: 1rem 0;
+            }
+
+            .auth-section {
+                order: 0;
+                width: auto;
+                margin: 0;
+                padding: 0;
+                border: none;
+            }
+
+            .login-container {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-<div class="login-container">
-    <h2>Вход в MotoShop</h2>
-    <form th:action="@{/login}" method="post">
-        <input type="text" name="username" placeholder="Логин" required>
-        <input type="password" name="password" placeholder="Пароль" required>
-        <button type="submit">Войти</button>
-    </form>
-    <p style="text-align: center; margin-top: 15px; font-size: 12px;">
-        Логин: user<br>
-        Пароль: (смотри в консоли при запуске)
-    </p>
-</div>
+<!-- Шапка -->
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">Moto<span>Gear</span></div>
+            <nav class="nav">
+                <a href="/">Главная</a>
+                <a href="/categories">Каталог</a>
+                <a href="#" class="cart-icon">
+                    <span aria-hidden="true">🛒</span>
+                    <span>(0)</span>
+                </a>
+            </nav>
+            <div class="auth-section">
+                <a href="/api/auth/register">Регистрация</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Основной контент -->
+<main class="main-content">
+    <div class="container">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>Вход в аккаунт</h1>
+                <p>Введите свои учетные данные для входа</p>
+            </div>
+
+            <!-- Сообщения об ошибках и успехах -->
+            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+            <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="form-group">
+                    <label for="username">Логин</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Введите ваш логин" required>
+                </div>
+
+                <div class="form-group password-toggle">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Введите ваш пароль" required>
+                    <span class="toggle-icon" id="togglePassword">👁️</span>
+                </div>
+
+                <button type="submit" class="btn">Войти</button>
+            </form>
+
+            <div class="form-footer">
+                <p>Нет аккаунта? <a href="/api/auth/register">Зарегистрируйтесь</a></p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Футер -->
+<footer class="footer">
+    <div class="container">
+        <p>© 2025 MotoGear. Все права защищены.</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Переключение видимости пароля
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.textContent = '🔒';
+            } else {
+                passwordInput.type = 'password';
+                this.textContent = '👁️';
+            }
+        });
+    });
+</script>
 </body>
 </html>
