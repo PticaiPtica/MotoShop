@@ -1,8 +1,8 @@
 package ru.academy.homework.motoshop.config;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -16,11 +16,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import ru.academy.homework.motoshop.services.UserDetailsServiceImpl;
 
 import java.util.Arrays;
+import java.util.List;
 
+/**
+ * Конфигурация безопасности приложения.
+ * Настраивает аутентификацию, авторизацию и CORS.
+ */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -29,6 +33,13 @@ public class SecurityConfig {
     private final AuthEntryPointJwt unauthorizedHandler;
     private final AuthTokenFilter authTokenFilter;
 
+    /**
+     * Конструктор конфигурации безопасности.
+     *
+     * @param userDetailsService сервис для загрузки данных пользователя
+     * @param unauthorizedHandler обработчик неавторизованных запросов
+     * @param authTokenFilter JWT фильтр аутентификации
+     */
     public SecurityConfig(UserDetailsServiceImpl userDetailsService,
                           AuthEntryPointJwt unauthorizedHandler,
                           AuthTokenFilter authTokenFilter) {
@@ -37,6 +48,11 @@ public class SecurityConfig {
         this.authTokenFilter = authTokenFilter;
     }
 
+    /**
+     * Настраивает провайдер аутентификации.
+     *
+     * @return настроенный DaoAuthenticationProvider
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -45,16 +61,35 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    /**
+     * Создает менеджер аутентификации.
+     *
+     * @param authConfig конфигурация аутентификации
+     * @return менеджер аутентификации
+     * @throws Exception если произошла ошибка при создании
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * Создает кодировщик паролей.
+     *
+     * @return экземпляр BCryptPasswordEncoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Настраивает цепочку фильтров безопасности.
+     *
+     * @param http объект для настройки безопасности
+     * @return сконфигурированная цепочка фильтров безопасности
+     * @throws Exception если произошла ошибка при настройке
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -63,35 +98,46 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Разрешаем доступ без аутентификации
+                        // Разрешаем доступ без аутентификации к статическим ресурсам и эндпоинтам аутентификации
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/index.html").permitAll()
+                        .requestMatchers("/api/products.html").permitAll()
+                        .requestMatchers("/api/product.html").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/register").permitAll()
+                        .requestMatchers("/auth/**").permitAll()  // Это должно покрывать /auth/register, /auth/login
                         .requestMatchers("/css/**").permitAll()
+                        .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/js/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/favicon.ico").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products").permitAll()
+
                         // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated()
                 );
 
         http.authenticationProvider(authenticationProvider());
-
-        // Добавляем JWT фильтр только для защищенных запросов
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    /**
+     * Настраивает CORS для приложения.
+     *
+     * @return источник конфигурации CORS
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+
+        // Явно разрешаем заголовки авторизации для JWT
+        configuration.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

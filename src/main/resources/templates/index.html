@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MotoGear – магазин мотоэкипировки</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Babas+Nee&family=Roboto:wght@400;700&display=swap"
           rel="stylesheet">
     <style>
         /* Reset and base styles */
@@ -307,14 +307,13 @@
                     <span>(0)</span>
                 </a>
             </nav>
-            <div class="auth-section" th:if="${#authentication.isAuthenticated()}">
+            <div class="auth-section" th:if="${#authorization.expression('isAuthenticated() and !isAnonymous()')}">
                 <span>Добро пожаловать, <span th:text="${#authentication.name}"></span>!</span>
-                <a th:href="@{/auth/logout}">Выйти</a>
+                <a th:href="@{/api/auth/logout}">Выйти</a>
             </div>
-            <div class="auth-section" th:unless="${#authentication.isAuthenticated()}">
-                <a th:href="@{/auth/login}">Войти</a>
-                <span>|</span>
-                <a th:href="@{/auth/register}">Регистрация</a>
+            <div class="auth-section" th:unless="${#authorization.expression('isAuthenticated() and !isAnonymous()')}">
+                <a th:href="@{/api/auth/login}">Войти</a>
+                <a th:href="@{/api/auth/register}">Регистрация</a>
             </div>
         </div>
     </div>

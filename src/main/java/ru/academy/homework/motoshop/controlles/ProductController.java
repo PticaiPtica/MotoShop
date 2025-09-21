@@ -5,13 +5,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.academy.homework.motoshop.model.Category;
 import ru.academy.homework.motoshop.model.Product;
-import ru.academy.homework.motoshop.model.ProductAttribute;
-import ru.academy.homework.motoshop.model.ProductImage;
 import ru.academy.homework.motoshop.services.CategoryService;
 import ru.academy.homework.motoshop.services.ProductService;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/products")
@@ -26,22 +25,22 @@ public class ProductController {
         this.categoryService = categoryService;
     }
 
-    // GET - Получить все продукты с полной информацией
+    // GET - Получить все продукты
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> products = productService.getAllProductsWithDetails();
+        List<Product> products = productService.getAllProducts();
         return ResponseEntity.ok(products);
     }
 
-    // GET - Получить продукт по ID с полной информацией
+    // GET - Получить продукт по ID
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        return productService.getProductByIdWithDetails(id)
-                .map(ResponseEntity::ok)
+        Optional<Product> product = productService.getProductById(id);
+        return product.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST - Создать новый продукт с обработкой связанных сущностей
+    // POST - Создать новый продукт
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
         // Проверяем и устанавливаем категорию
@@ -49,20 +48,6 @@ public class ProductController {
             Category category = categoryService.getCategoryById(product.getCategory().getId())
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
-        }
-
-        // Устанавливаем обратные ссылки для изображений
-        if (product.getImages() != null) {
-            for (ProductImage image : product.getImages()) {
-                image.setProduct(product);
-            }
-        }
-
-        // Устанавливаем обратные ссылки для атрибутов
-        if (product.getAttributes() != null) {
-            for (ProductAttribute attribute : product.getAttributes()) {
-                attribute.setProduct(product);
-            }
         }
 
         Product savedProduct = productService.saveProduct(product);
@@ -73,18 +58,28 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
         try {
-            Product updatedProduct = productService.updateProductWithDetails(id, productDetails);
+            // Проверяем и устанавливаем категорию, если она указана
+            if (productDetails.getCategory() != null && productDetails.getCategory().getId() != null) {
+                Category category = categoryService.getCategoryById(productDetails.getCategory().getId())
+                        .orElseThrow(() -> new RuntimeException("Category not found"));
+                productDetails.setCategory(category);
+            }
+
+            Product updatedProduct = productService.updateProduct(id, productDetails);
             return ResponseEntity.ok(updatedProduct);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    // PATCH - Частичное обновление (например, только количество)
+    // PATCH - Обновление количества
     @PatchMapping("/{id}/quantity")
     public ResponseEntity<Product> updateProductQuantity(@PathVariable Long id, @RequestParam int quantity) {
         try {
-            Product updatedProduct = productService.updateProductQuantity(id, quantity);
+            Product product = productService.getProductById(id)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+            product.setQuantity(quantity);
+            Product updatedProduct = productService.saveProduct(product);
             return ResponseEntity.ok(updatedProduct);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -95,7 +90,10 @@ public class ProductController {
     @PatchMapping("/{id}/price")
     public ResponseEntity<Product> updateProductPrice(@PathVariable Long id, @RequestParam BigDecimal price) {
         try {
-            Product updatedProduct = productService.updateProductPrice(id, price);
+            Product product = productService.getProductById(id)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+            product.setPrice(price);
+            Product updatedProduct = productService.saveProduct(product);
             return ResponseEntity.ok(updatedProduct);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -105,8 +103,12 @@ public class ProductController {
     // DELETE - Удалить продукт
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
-        return ResponseEntity.noContent().build();
+        try {
+            productService.deleteProduct(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     // GET - Поиск продуктов по названию
@@ -139,31 +141,25 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    // GET - Изображения продукта
-    @GetMapping("/{id}/images")
-    public ResponseEntity<List<ProductImage>> getProductImages(@PathVariable Long id) {
-        List<ProductImage> images = productService.getProductImages(id);
-        return ResponseEntity.ok(images);
+    // GET - Получить изображение продукта (URL)
+    @GetMapping("/{id}/image")
+    public ResponseEntity<String> getProductImage(@PathVariable Long id) {
+        Optional<Product> product = productService.getProductById(id);
+        return product.map(p -> ResponseEntity.ok(p.getImageUrl()))
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // GET - Атрибуты продукта
-    @GetMapping("/{id}/attributes")
-    public ResponseEntity<List<ProductAttribute>> getProductAttributes(@PathVariable Long id) {
-        List<ProductAttribute> attributes = productService.getProductAttributes(id);
-        return ResponseEntity.ok(attributes);
-    }
-
-    // POST - Добавить изображение к продукту
-    @PostMapping("/{id}/images")
-    public ResponseEntity<ProductImage> addImageToProduct(@PathVariable Long id, @RequestBody ProductImage image) {
-        ProductImage savedImage = productService.addImageToProduct(id, image);
-        return ResponseEntity.ok(savedImage);
-    }
-
-    // POST - Добавить атрибут к продукту
-    @PostMapping("/{id}/attributes")
-    public ResponseEntity<ProductAttribute> addAttributeToProduct(@PathVariable Long id, @RequestBody ProductAttribute attribute) {
-        ProductAttribute savedAttribute = productService.addAttributeToProduct(id, attribute);
-        return ResponseEntity.ok(savedAttribute);
+    // POST - Обновить изображение продукта
+    @PostMapping("/{id}/image")
+    public ResponseEntity<Product> updateProductImage(@PathVariable Long id, @RequestParam String imageUrl) {
+        try {
+            Product product = productService.getProductById(id)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+            product.setImageUrl(imageUrl);
+            Product updatedProduct = productService.saveProduct(product);
+            return ResponseEntity.ok(updatedProduct);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

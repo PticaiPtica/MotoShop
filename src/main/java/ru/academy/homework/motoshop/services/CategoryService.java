@@ -1,5 +1,6 @@
 package ru.academy.homework.motoshop.services;
 
+import org.springframework.transaction.annotation.Transactional;
 import ru.academy.homework.motoshop.model.Category;
 
 import java.util.List;
@@ -52,51 +53,9 @@ public interface CategoryService {
      */
     void deleteById(Long id);
 
-    /**
-     * Возвращает список корневых категорий (категорий без родителя).
-     *
-     * @return список корневых категорий
-     */
-    List<Category> getRootCategories();
 
-    /**
-     * Возвращает список подкатегорий для указанной родительской категории.
-     *
-     * @param parentId идентификатор родительской категории
-     * @return список подкатегорий
-     */
-    List<Category> getSubcategories(Long parentId);
-
-    /**
-     * Возвращает полное дерево категорий с вложенностью.
-     *
-     * @return иерархическое дерево категорий
-     */
-    List<Category> getCategoryTree();
-
-    /**
-     * Возвращает путь от корневой категории до указанной.
-     *
-     * @param categoryId идентификатор целевой категории
-     * @return список категорий от корня до целевой
-     */
-    List<Category> getCategoryPath(Long categoryId);
-
-    /**
-     * Возвращает количество товаров в указанной категории.
-     *
-     * @param categoryId идентификатор категории
-     * @return количество товаров
-     */
+    @Transactional(readOnly = true)
     long getProductCount(Long categoryId);
-
-    /**
-     * Возвращает общее количество товаров в категории и всех её подкатегориях.
-     *
-     * @param categoryId идентификатор категории
-     * @return суммарное количество товаров
-     */
-    long getTotalProductCountIncludingSubcategories(Long categoryId);
 
     /**
      * Ищет категории по названию.
@@ -113,14 +72,7 @@ public interface CategoryService {
      */
     List<Category> getCategoriesWithProducts();
 
-    /**
-     * Проверяет, может ли категория быть родителем для другой категории.
-     *
-     * @param categoryId идентификатор проверяемой категории
-     * @param potentialParentId идентификатор потенциального родителя
-     * @return true если валидация прошла успешно
-     */
-    boolean isValidParentCategory(Long categoryId, Long potentialParentId);
+
 
     /**
      * Проверяет, есть ли товары в категории.
@@ -138,13 +90,7 @@ public interface CategoryService {
      */
     boolean existsById(Long id);
 
-    /**
-     * Проверяет, есть ли подкатегории у категории.
-     *
-     * @param categoryId идентификатор категории
-     * @return true если есть подкатегории
-     */
-    boolean categoryHasSubcategories(Long categoryId);
+
 
     // Новые методы
 
@@ -172,4 +118,12 @@ public interface CategoryService {
      * @return сохраненная категория
      */
     Category save(Category category);
+
+    long count();
+
+    void deleteAll();
+
+    void delete(Category category);
+
+    List<Category> saveAll(Iterable<Category> categories);
 }
