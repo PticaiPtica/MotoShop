@@ -293,7 +293,7 @@
             <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
             <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
 
-            <form th:action="@{/login}" method="post">
+            <form th:action="@{/api/auth/login}" method="post">
                 <div class="form-group">
                     <label for="username">Логин</label>
                     <input type="text" id="username" name="username" class="form-control" placeholder="Введите ваш логин" required>
@@ -324,17 +324,45 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Переключение видимости пароля
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.textContent = '🔒';
-            } else {
-                passwordInput.type = 'password';
-                this.textContent = '👁️';
+        const loginForm = document.getElementById('loginForm');
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/auth/signin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Сохраните токен и перенаправьте пользователя
+                    localStorage.setItem('token', data.token);
+                    window.location.href = '/';
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.message || 'Ошибка входа');
+                }
+            } catch (error) {
+                showError('Ошибка соединения с сервером');
             }
         });
+
+        function showError(message) {
+            const errorAlert = document.getElementById('errorAlert');
+            errorAlert.textContent = message;
+            errorAlert.style.display = 'block';
+        }
     });
 </script>
 </body>
