@@ -1,10 +1,7 @@
 package ru.academy.homework.motoshop.entity;
 
-
-
-
 import jakarta.persistence.*;
-
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -28,15 +25,28 @@ public class User {
     @JoinColumn(name = "role_id")
     private Role role;
 
-    public User(String username, String email, String encode) {
+    @Column(name = "enabled", nullable = false)
+    private boolean enabled = true;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
+    public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
-        this.password = encode;
+        this.password = password;
+        this.enabled = true;
     }
 
     public User() {
     }
 
+    // Геттеры и сеттеры
     public Long getId() {
         return id;
     }
@@ -77,13 +87,30 @@ public class User {
         this.email = email;
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     @Override
     public String toString() {
         return "User{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", role=" + role +
+                ", email='" + email + '\'' +
+                ", enabled=" + enabled +
+                ", role=" + (role != null ? role.getName() : "null") +
                 '}';
     }
 
@@ -94,12 +121,11 @@ public class User {
         User user = (User) o;
         return Objects.equals(id, user.id) &&
                 Objects.equals(username, user.username) &&
-                Objects.equals(password, user.password) &&
-                Objects.equals(role, user.role);
+                Objects.equals(email, user.email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, password, role);
+        return Objects.hash(id, username, email);
     }
 }
