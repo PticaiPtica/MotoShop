@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoGear - Каталог товаров</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap"
+          rel="stylesheet">
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #fff;
+            padding-top: 80px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logout-message {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+<!-- Шапка с информацией о пользователе -->
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">Moto<span>Gear</span></div>
+            <nav class="nav">
+                <a href="/">Главная</a>
+                <a href="/catalog">Каталог</a>
+                <a href="#" class="cart-icon">
+                    <span aria-hidden="true">🛒</span>
+                    <span class="sr-only">Корзина</span>
+                    <span>(0)</span>
+                </a>
+            </nav>
+
+            <!-- Блок для аутентифицированных пользователей -->
+            <div class="auth-section" id="auth-authenticated" style="display: none;">
+                <span>Добро пожаловать, <span id="username"></span>!</span>
+                <a href="/user/profile">Профиль</a>
+                <span>|</span>
+                <a href="/api/auth/logout" onclick="logout(event)">Выйти</a>
+            </div>
+
+            <!-- Блок для неаутентифицированных пользователей -->
+            <div class="auth-section" id="auth-not-authenticated" style="display: none;">
+                <a href="/api/auth/login">Войти</a>
+                <span>|</span>
+                <a href="/api/auth/register">Регистрация</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="page-header">
+        <h1>MotoGear</h1>
+        <p>Каталог мотоэкипировки</p>
+    </div>
+
+    <!-- Остальная часть вашего HTML кода -->
+    <div class="action-buttons">
+        <button class="btn" onclick="loadProducts()">
+            🔄 Обновить список
+        </button>
+        <button class="btn btn-danger" onclick="clearFilters()">
+            🗑️ Очистить фильтры
+        </button>
+    </div>
+
+    <!-- Остальной код без изменений -->
+</div>
+
+<script>
+    function viewProduct(productId) {
+        window.location.href = '/product?id=' + productId;
+    }
+
+    function editProduct(productId) {
+        alert('Редактирование продукта ' + productId);
+        // window.location.href = '/edit-product?id=' + productId;
+    }
+
+    function createNewProduct() {
+        alert('Создание нового продукта');
+        // window.location.href = '/create-product';
+    }
+
+    function clearFilters() {
+        window.location.href = '/catalog';
+    }
+
+
+    function formatPrice(price) {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB'
+        }).format(price);
+    }
+
+    let authCheckInterval;
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        document.getElementById('auth-authenticated').style.display = 'none';
+        document.getElementById('auth-not-authenticated').style.display = 'none';
+
+
+        checkAuthStatus();
+        authCheckInterval = setInterval(checkAuthStatus, 30000);
+    });
+
+    async function checkAuthStatus() {
+        try {
+            const response = await fetch('/api/auth/validate?t=' + Date.now(), {
+                headers: {
+                    'Cache-Control': 'no-cache'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Auth data:', data);
+
+            const isAuthenticated = data.status === 'valid' || data.authenticated === true;
+
+            if (isAuthenticated) {
+                const username = data.username || data.user || 'Пользователь';
+                showAuthenticatedUI(username);
+            } else {
+                showNotAuthenticatedUI();
+            }
+        } catch (error) {
+            console.log('Auth check failed:', error);
+            showNotAuthenticatedUI();
+        }
+    }
+
+    function showAuthenticatedUI(username) {
+        const authAuth = document.getElementById('auth-authenticated');
+        const authNotAuth = document.getElementById('auth-not-authenticated');
+
+        if (authAuth) {
+            authAuth.style.display = 'flex';
+            document.getElementById('username').textContent = username;
+        }
+        if (authNotAuth) authNotAuth.style.display = 'none';
+    }
+
+    function showNotAuthenticatedUI() {
+        const authAuth = document.getElementById('auth-authenticated');
+        const authNotAuth = document.getElementById('auth-not-authenticated');
+
+        if (authAuth) authAuth.style.display = 'none';
+        if (authNotAuth) authNotAuth.style.display = 'flex';
+    }
+
+    async function logout(event) {
+        if (event) event.preventDefault();
+
+        if (confirm('Вы уверены, что хотите выйти?')) {
+            // Немедленно показываем UI неаутентифицированного пользователя
+            showNotAuthenticatedUI();
+
+            // Останавливаем интервал проверки
+            if (authCheckInterval) {
+                clearInterval(authCheckInterval);
+            }
+
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    credentials: 'include'
+                });
+
+                console.log('Logout response status:', response.status);
+                // Редирект на главную с параметром logout
+                window.location.href = '/?logout=true&t=' + Date.now();
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '/?logout=true&t=' + Date.now();
+            }
+        }
+    }
+
+    // Показываем сообщение о выходе если есть параметр
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('logout')) {
+        showLogoutMessage();
+    }
+
+    function showLogoutMessage() {
+        const message = document.createElement('div');
+        message.className = 'logout-message';
+        message.textContent = 'Вы успешно вышли из системы';
+        document.body.appendChild(message);
+
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.parentNode.removeChild(message);
+            }
+        }, 3000);
+    }
+</script>
+</body>
+</html>

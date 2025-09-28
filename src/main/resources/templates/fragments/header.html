@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+<!-- Простая версия без зависимостей -->
+<nav th:fragment="header" class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" th:href="@{/templates/admin/dashboard}">
+      <i class="fas fa-motorcycle"></i> MotoShop Admin
+    </a>
+    <div class="navbar-nav ms-auto">
+      <a class="nav-link" th:href="@{/admin/dashboard}">Панель</a>
+      <a class="nav-link" th:href="@{/}">Вернуться в магазин</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Альтернативная простая версия без Bootstrap -->
+<div th:fragment="simple-header">
+  <div style="background: #343a40; color: white; padding: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="margin: 0;">MotoShop Admin</h2>
+      <div>
+
+        <a th:href="@{/admin/dashboard}" style="color: white; margin-right: 1rem;">Панель</a>
+        <a th:href="@{/}" style="color: white;">Магазин</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

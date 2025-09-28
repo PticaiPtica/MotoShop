@@ -119,6 +119,11 @@ public interface CategoryService {
      */
     Category save(Category category);
 
+    void deleteCategory(Long id);
+    Category categoryFindById(Long id);
+
+
+
     long count();
 
     void deleteAll();

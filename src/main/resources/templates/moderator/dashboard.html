@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет пользователя</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color:  #4cc9f0;
+            color: white;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .user-info {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background-color: #4cc9f0;
+        }
+        .btn-logout {
+            background-color: #f44336;
+        }
+        .btn-logout:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Личный кабинет</h1>
+    <div>
+        <a th:href="@{/}" class="btn">Главная</a>
+        <a th:href="@{api/auth/logout}" class="btn btn-logout">Выйти</a>
+    </div>
+</div>
+
+<div class="user-info" th:if="${user}">
+    <h2>Информация о пользователе</h2>
+    <p><strong>ID:</strong> <span th:text="${user.id}">1</span></p>
+    <p><strong>Имя пользователя:</strong> <span th:text="${user.username}"></span></p>
+    <p><strong>Email:</strong> <span th:text="${user.email}"></span></p>
+    <p><strong>Роль:</strong> <span th:text="${user.role?.name}"></span></p>
+</div>
+
+<div th:unless="${user}" class="user-info">
+    <p>Пользователь не авторизован. <a th:href="@{/auth/login}">Войдите в систему</a></p>
+</div>
+</body>
+</html>

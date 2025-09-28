@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -36,109 +35,101 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
 
+        // Пропускаем запросы logout без обработки
+        if (requestURI.equals("/api/auth/logout")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
-            String jwt = parseJwt(request);
+            String jwt = getJwtFromRequest(request);
 
-            if (jwt != null) {
-                logger.debug("JWT token found for URI: {}", requestURI);
+            logger.debug("Processing request to: {}, JWT present: {}", requestURI, jwt != null);
 
-                if (jwtUtils.validateJwtToken(jwt)) {
-                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                    logger.debug("JWT token valid for user: {}", username);
+            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                String username = jwtUtils.getUserNameFromJwtToken(jwt);
 
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    SecurityContext context = SecurityContextHolder.createEmptyContext();
-                    context.setAuthentication(authentication);
-                    SecurityContextHolder.setContext(context);
-
-                    logger.debug("Authentication set for user: {} on URI: {}", username, requestURI);
-                } else {
-                    logger.warn("JWT token is invalid for URI: {}", requestURI);
-                    // Очищаем контекст только если путь требует аутентификации
-                    if (requiresAuthentication(requestURI)) {
-                        SecurityContextHolder.clearContext();
-                        logger.debug("Cleared security context for protected URI: {}", requestURI);
-                    }
-                }
-            } else {
-                logger.debug("No JWT token found for URI: {}", requestURI);
-                // Очищаем контекст только для защищенных путей, где ожидается аутентификация
-                if (requiresAuthentication(requestURI)) {
-                    SecurityContextHolder.clearContext();
-                    logger.debug("Cleared security context - no token for protected URI: {}", requestURI);
-                }
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                logger.debug("Set authentication for user: {} on URI: {}", username, requestURI);
+            } else if (requiresAuthentication(requestURI) && jwt == null) {
+                logger.debug("No JWT token found for protected URI: {}", requestURI);
+            } else if (requiresAuthentication(requestURI) && jwt != null) {
+                logger.warn("Invalid JWT token for protected URI: {}", requestURI);
             }
+
         } catch (Exception e) {
-            logger.error("Cannot set user authentication for URI: {} - Error: {}", requestURI, e.getMessage());
-            // В случае ошибки очищаем контекст только для защищенных путей
-            if (requiresAuthentication(requestURI)) {
-                SecurityContextHolder.clearContext();
-            }
+            logger.error("Cannot set user authentication: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private boolean isPublicPath(String uri) {
-        // Более точное определение публичных путей
-        return uri.startsWith("/api/auth/login") ||
-                uri.startsWith("/api/auth/register") ||
-                uri.startsWith("/api/auth/logout") ||
-                uri.equals("/login") ||
-                uri.startsWith("/css/") ||
-                uri.startsWith("/js/") ||
-                uri.startsWith("/images/") ||
-                uri.equals("/favicon.ico") ||
-                uri.startsWith("/error") ||
-                uri.startsWith("/.well-known/");
-    }
-
-    private boolean requiresAuthentication(String uri) {
-        // Все пути админки и API требуют аутентификации
-        return uri.startsWith("/admin/") ||
-                uri.startsWith("/api/admin/") ||
-                uri.startsWith("/api/auth/validate") ||  // validate требует аутентификации!
-                uri.startsWith("/moderator/") ||
-                uri.startsWith("/profile");
-    }
-
     private String parseJwt(HttpServletRequest request) {
-        // 1. Проверяем заголовок Authorization (приоритет для API запросов)
+        // Проверяем заголовок Authorization
         String headerAuth = request.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            String jwt = headerAuth.substring(7);
-            if (StringUtils.hasText(jwt)) {
-                logger.debug("Found JWT token in Authorization header for URI: {}", request.getRequestURI());
-                return jwt;
-            }
+            return headerAuth.substring(7);
         }
 
-        // 2. Проверяем токен из cookies (для браузерных запросов)
+        // Проверяем cookie
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("jwtToken".equals(cookie.getName())) {
                     String jwt = cookie.getValue();
                     if (StringUtils.hasText(jwt)) {
-                        logger.debug("Found JWT token in cookie for URI: {}", request.getRequestURI());
+                        logger.debug("Found JWT token in cookie, length: {}", jwt.length());
                         return jwt;
                     }
                 }
             }
         }
 
-        // 3. Проверяем параметр запроса (для редких случаев)
+        // Проверяем параметр token
         String jwtParam = request.getParameter("token");
         if (StringUtils.hasText(jwtParam)) {
-            logger.debug("Found JWT token in request parameter for URI: {}", request.getRequestURI());
             return jwtParam;
         }
 
+        return null;
+    }
+
+    private boolean requiresAuthentication(String uri) {
+        return uri.startsWith("/admin/") ||
+                uri.startsWith("/moderator/") ||
+                uri.startsWith("/profile") ||
+                uri.startsWith("/api/admin/") ||
+                uri.startsWith("/api/moderator/") ||
+                uri.equals("/api/auth/validate");
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/api/auth/login") ||
+                path.startsWith("/api/auth/register") ||
+                path.startsWith("/api/auth/logout") || // ВАЖНО: исключаем logout
+                path.startsWith("/css/") ||
+                path.startsWith("/js/") ||
+                path.startsWith("/images/") ||
+                path.equals("/favicon.ico") ||
+                path.startsWith("/error");
+    }
+    private String getJwtFromRequest(HttpServletRequest request) {
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("jwtToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
         return null;
     }
 }

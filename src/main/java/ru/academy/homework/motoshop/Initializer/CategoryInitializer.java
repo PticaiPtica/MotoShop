@@ -1,5 +1,6 @@
 package ru.academy.homework.motoshop.Initializer;
 
+import org.springframework.core.annotation.Order;
 import ru.academy.homework.motoshop.model.Category;
 import ru.academy.homework.motoshop.repository.CategoryRepository;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
+@Order(1)
 public class CategoryInitializer implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(CategoryInitializer.class);
@@ -36,7 +38,7 @@ public class CategoryInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        logger.info("Starting category initialization...");
+       // logger.info("Starting category initialization...");
         initializeCategories();
     }
 
@@ -62,18 +64,17 @@ public class CategoryInitializer implements CommandLineRunner {
                 Category newCategory = createNewCategory(name, data);
                 categoryRepository.save(newCategory);
                 createdCount++;
-                logger.debug("Created category: {}", name);
+              //  logger.debug("Created category: {}", name);
             } else {
                 // Обновляем существующую категорию
                 if (updateExistingCategory(existingCategory, data)) {
                     updatedCount++;
-                    logger.debug("Updated category: {}", name);
+                 //   logger.debug("Updated category: {}", name);
                 }
             }
         }
 
-        logger.info("Category initialization completed: {} created, {} updated",
-                createdCount, updatedCount);
+      //  logger.info("Category initialization completed: {} created, {} updated",             createdCount, updatedCount);
     }
 
     private Map<String, CategoryData> createCategoriesData() {

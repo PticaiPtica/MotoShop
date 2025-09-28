@@ -1,8 +1,9 @@
-package ru.academy.homework.motoshop.controlles;
+package ru.academy.homework.motoshop.controllers;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +39,8 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    // Для production установить в true, для разработки - false
-    private final boolean isSecureCookie = false;
+
+    private final boolean isSecureCookie = true;
     private final int jwtExpirationMs = 24 * 60 * 60 * 1000; // 24 часа
 
     public AuthController(UserService userService,
@@ -220,28 +221,96 @@ public class AuthController {
             return "register";
         }
     }
-
     /**
      * Выход из системы
      */
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+    @GetMapping("/logout")
+    public String logoutGet(HttpServletRequest request, HttpServletResponse response) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null) {
-                logger.info("Logout for user: {}", auth.getName());
+            String username = (auth != null) ? auth.getName() : "unknown";
+            logger.info("Starting logout process for user: {}", username);
+
+            // Дополнительная очистка сессии
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+                logger.debug("Session invalidated for user: {}", username);
             }
 
+            // Очищаем SecurityContext
             SecurityContextHolder.clearContext();
-            removeJwtCookie(response);
+            logger.debug("SecurityContext cleared for user: {}", username);
 
-            return ResponseEntity.ok().body(Collections.singletonMap("message", "Выход выполнен успешно"));
+            // Удаляем JWT cookie
+            removeJwtCookie(response);
+            logger.debug("JWT cookie removed for user: {}", username);
+
+            logger.info("Logout completed successfully for user: {}", username);
+            return "redirect:/?logout=true&timestamp=" + System.currentTimeMillis();
+
         } catch (Exception e) {
             logger.error("Logout error", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("error", "Ошибка при выходе"));
+            return "redirect:/?error=logout_failed";
         }
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutPost(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String username = (auth != null) ? auth.getName() : "unknown";
+            logger.info("Starting API logout process for user: {}", username);
+
+            // 1. Очищаем SecurityContext
+            SecurityContextHolder.clearContext();
+            logger.debug("SecurityContext cleared for API logout, user: {}", username);
+
+            // 2. Инвалидируем сессию
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+                logger.debug("Session invalidated for API logout, user: {}", username);
+            }
+
+            // 3. Удаляем куки с ПРАВИЛЬНЫМ именем
+            removeAllAuthCookies(response);
+            logger.debug("All auth cookies removed for API logout, user: {}", username);
+
+            // 4. Заголовки против кэширования
+            response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            response.setHeader("Pragma", "no-cache");
+            response.setHeader("Expires", "0");
+
+            Map<String, String> responseBody = new HashMap<>();
+            responseBody.put("message", "Logout successful");
+
+            logger.info("API logout completed successfully for user: {}", username);
+            return ResponseEntity.ok().body(responseBody);
+
+        } catch (Exception e) {
+            logger.error("API logout error", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Logout failed"));
+        }
+    }
+    private void removeAllAuthCookies(HttpServletResponse response) {
+        // Удаляем куку с ПРАВИЛЬНЫМ именем
+        removeCookie(response, "jwtToken"); // исправлено с "jwt" на "jwtToken"
+        removeCookie(response, "JSESSIONID");
+        removeCookie(response, "remember-me");
+    }
+
+    private void removeCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(isSecureCookie); // используйте ту же настройку, что и при установке
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+
+
 
     /**
      * Валидация JWT токена
@@ -291,7 +360,7 @@ public class AuthController {
      * Определение URL для редиректа после входа
      */
     private String determineRedirectUrl(UserDetailsImpl userDetails, String requestedRedirect) {
-        // Приоритет: запрошенный redirect → роль пользователя → дефолтная страница
+
         if (requestedRedirect != null && !requestedRedirect.isEmpty()) {
             return requestedRedirect;
         }
@@ -331,18 +400,14 @@ public class AuthController {
      * Удаление JWT токена из cookie
      */
     private void removeJwtCookie(HttpServletResponse response) {
-        try {
-            Cookie jwtCookie = new Cookie("jwtToken", "");
-            jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(isSecureCookie);
-            jwtCookie.setPath("/");
-            jwtCookie.setMaxAge(0);
-            response.addCookie(jwtCookie);
-            logger.debug("JWT cookie removed successfully");
-        } catch (Exception e) {
-            logger.error("Error removing JWT cookie", e);
-        }
+        Cookie cookie = new Cookie("jwt", null); // или имя вашей JWT куки
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
     }
+
 
     /**
      * Создание ответа с данными аутентификации (перегруженная версия без redirectUrl)
@@ -370,7 +435,7 @@ public class AuthController {
         return responseBody;
     }
 
-    // DTO классы остаются без изменений
+
     public static class LoginRequest {
         private String username;
         private String password;

@@ -1,51 +1,97 @@
 package ru.academy.homework.motoshop.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import ru.academy.homework.motoshop.model.Category;
+import ru.academy.homework.motoshop.entity.OrderItem;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
 @Table(name = "products")
 public class Product {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String name;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal price;
-
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    private int quantity;
+    @Column(nullable = false)
+    private Double price;
+
+    @Column(name = "stock_quantity")
+    private Integer stockQuantity = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    @JsonIgnoreProperties("products")
+    private Category category;
+
+    @Column(name = "brand")
+    private String brand;
+
+    @Column(name = "model")
+    private String model;
 
     @Column(name = "image_url")
     private String imageUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
+    @Column(name = "available")
+    private Boolean available = true;
 
-    // Конструкторы
-    public Product() {}
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
 
-    public Product(String name, BigDecimal price, String description, String imageUrl) {
-        this.name = name;
-        this.price = price;
-        this.description = description;
-        this.imageUrl = imageUrl;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    public Product(String name, BigDecimal price, String description, String imageUrl, Category category) {
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    // Конструкторы
+    public Product() {
+    }
+
+    public Product(String name, String description, Double price, Integer stockQuantity, Category category) {
         this.name = name;
-        this.price = price;
         this.description = description;
-        this.imageUrl = imageUrl;
+        this.price = price;
+        this.stockQuantity = stockQuantity;
         this.category = category;
+        this.available = stockQuantity > 0;
+    }
+
+    // Вспомогательные методы
+    public void decreaseStock(Integer quantity) {
+        if (this.stockQuantity >= quantity) {
+            this.stockQuantity -= quantity;
+            this.available = this.stockQuantity > 0;
+        } else {
+            throw new IllegalArgumentException("Недостаточно товара на складе");
+        }
+    }
+
+    public void increaseStock(Integer quantity) {
+        this.stockQuantity += quantity;
+        this.available = true;
     }
 
     // Геттеры и сеттеры
@@ -57,26 +103,12 @@ public class Product {
         this.id = id;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-
-
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
     }
 
     public String getDescription() {
@@ -87,12 +119,21 @@ public class Product {
         this.description = description;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public Double getPrice() {
+        return price;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Integer getStockQuantity() {
+        return stockQuantity;
+    }
+
+    public void setStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity;
+        this.available = stockQuantity > 0;
     }
 
     public Category getCategory() {
@@ -103,19 +144,70 @@ public class Product {
         this.category = category;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public String getBrand() {
+        return brand;
     }
 
-    // Переопределенные методы
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public Boolean getAvailable() {
+        return available;
+    }
+
+    public void setAvailable(Boolean available) {
+        this.available = available;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     @Override
     public String toString() {
         return "Product{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", price=" + price +
-                ", description='" + description + '\'' +
-                ", imageUrl='" + imageUrl + '\'' +
+                ", stockQuantity=" + stockQuantity +
+                ", available=" + available +
                 ", category=" + (category != null ? category.getName() : "null") +
                 '}';
     }
@@ -125,18 +217,11 @@ public class Product {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Product product = (Product) o;
-        return Objects.equals(id, product.id) &&
-                Objects.equals(name, product.name) &&
-                Objects.equals(price, product.price) &&
-                Objects.equals(description, product.description) &&
-                Objects.equals(imageUrl, product.imageUrl) &&
-                Objects.equals(category != null ? category.getId() : null,
-                        product.category != null ? product.category.getId() : null);
+        return Objects.equals(id, product.id) && Objects.equals(name, product.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, price, description, imageUrl,
-                category != null ? category.getId() : null);
+        return Objects.hash(id, name);
     }
 }

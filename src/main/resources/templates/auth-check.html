@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Проверка аутентификации - MotoShop</title>
+    <script>
+        async function checkAuthAndRedirect() {
+            try {
+                const response = await fetch('/api/auth/validate', {
+                    credentials: 'include' // Важно для отправки cookies
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.roles.includes('ROLE_ADMIN')) {
+                        window.location.href = '/admin/dashboard';
+                    } else {
+                        window.location.href = '/profile';
+                    }
+                } else {
+                    window.location.href = '/api/auth/login?redirect=' + encodeURIComponent('/admin/dashboard');
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/api/auth/login?redirect=' + encodeURIComponent('/admin/dashboard');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkAuthAndRedirect);
+    </script>
+</head>
+<body>
+<div style="text-align: center; margin-top: 50px;">
+    <h2>Проверка доступа...</h2>
+    <p>Пожалуйста, подождите, происходит проверка аутентификации.</p>
+</div>
+</body>
+</html>

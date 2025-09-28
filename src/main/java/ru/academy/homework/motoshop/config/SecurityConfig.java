@@ -2,17 +2,13 @@ package ru.academy.homework.motoshop.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,28 +18,74 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ru.academy.homework.motoshop.services.UserDetailsServiceImpl;
 
-import java.util.List;
+import java.util.Arrays;
 
 @Configuration
-@EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfig {
 
+    private final UserDetailsServiceImpl userDetailsService;
+    private final JwtAuthTokenFilter jwtAuthTokenFilter;
     private final AuthEntryPointJwt unauthorizedHandler;
-    private final JwtAuthTokenFilter authTokenFilter;
-    private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(AuthEntryPointJwt unauthorizedHandler,
-                          JwtAuthTokenFilter authTokenFilter,
-                          UserDetailsService userDetailsService) {
-        this.unauthorizedHandler = unauthorizedHandler;
-        this.authTokenFilter = authTokenFilter;
+    public SecurityConfig(UserDetailsServiceImpl userDetailsService,
+                          JwtAuthTokenFilter jwtAuthTokenFilter,
+                          AuthEntryPointJwt unauthorizedHandler) {
         this.userDetailsService = userDetailsService;
+        this.jwtAuthTokenFilter = jwtAuthTokenFilter;
+        this.unauthorizedHandler = unauthorizedHandler;
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(unauthorizedHandler)
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/login",
+                                "/register",
+                                "/error",
+                                "/css/**",
+                                "/**",
+                                "/js/**",
+                                "/images/**",
+                                "/favicon.ico"
+                        ).permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/moderator/**").hasRole("MODERATOR")
+                        .anyRequest().authenticated()
+
+                ).logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .logoutSuccessUrl("/?logout=true")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("jwtToken", "JSESSIONID")
+                        .permitAll()
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthTokenFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
@@ -55,84 +97,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(unauthorizedHandler)
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authorizeHttpRequests(auth -> auth
-                        // Публичные endpoints - включаем .well-known
-                        .requestMatchers("/.well-known/**").permitAll()
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/index.html").permitAll()
-                        .requestMatchers("/api/products.html").permitAll()
-                        .requestMatchers("/api/product.html").permitAll()
-                        .requestMatchers("/api/categories.html").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/register").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/css/**").permitAll()
-                        .requestMatchers("/api/test/**").permitAll()
-                        .requestMatchers("/js/**").permitAll()
-                        .requestMatchers("/images/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/favicon.ico").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products").permitAll()
-                        .requestMatchers("/login").permitAll()
-
-                        // Админские endpoints
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/moderator/**").hasAnyRole("MODERATOR", "ADMIN")
-
-                        // Защищенные endpoints
-                        .requestMatchers("/profile").authenticated()
-                        .requestMatchers("/api/auth/validate").authenticated()
-
-                        .anyRequest().authenticated()
-                )
-                // Форма логина
-                .formLogin(form -> form
-                        .loginPage("/api/auth/login")
-                        .loginProcessingUrl("/api/auth/login")
-                        .defaultSuccessUrl("/admin/dashboard", true)
-                        .failureUrl("/api/auth/login?error=true")
-                        .permitAll()
-                )
-                // Logout
-                .logout(logout -> logout
-                        .logoutUrl("/api/auth/logout")
-                        .logoutSuccessUrl("/api/auth/login")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("jwtToken", "JSESSIONID")
-                        .permitAll()
-                );
-
-        http.authenticationProvider(authenticationProvider());
-        http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
 }

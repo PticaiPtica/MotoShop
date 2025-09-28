@@ -1,6 +1,10 @@
 package ru.academy.homework.motoshop.services;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import ru.academy.homework.motoshop.entity.User;
+
+import java.util.Map;
 
 /**
  * Сервис для работы с пользователями.
@@ -43,4 +47,18 @@ public interface UserService {
      * @return объект User если найден, иначе null
      */
     User findByUsername(String username);
+
+    Long count();
+
+    Page<User> findAllUsers(Pageable pageable);
+
+    long getUsersCount();
+
+    void changeUserRole(Long userId, String newRole);
+
+    void setUserActiveStatus(Long userId, boolean active);
+
+    Map<String, Long> getRolesStatistics();
+
+    User findById(Long userId);
 }

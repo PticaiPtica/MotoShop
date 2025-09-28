@@ -106,6 +106,31 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
+    /**
+     * @param id
+     */
+    @Override
+    public void deleteCategory(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Категория не найдена"));
+
+        // Используйте метод, который не требует загрузки products
+        if (productRepository.existsByCategoryId(id)) {
+            throw new RuntimeException("Нельзя удалить категорию, так как она содержит продукты");
+        }
+
+        categoryRepository.delete(category);
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+    @Override
+    public Category categoryFindById(Long id) {
+        return categoryRepository.findById(id).orElse(null);
+    }
+
     @Transactional(readOnly = true)
     @Override
     public long getProductCount(Long categoryId) {

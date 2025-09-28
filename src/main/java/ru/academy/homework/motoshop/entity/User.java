@@ -2,6 +2,8 @@ package ru.academy.homework.motoshop.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -31,11 +33,15 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
 
+    // Конструкторы
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
@@ -44,6 +50,17 @@ public class User {
     }
 
     public User() {
+    }
+
+    // Вспомогательные методы
+    public void addOrder(Order order) {
+        orders.add(order);
+        order.setUser(this);
+    }
+
+    public void removeOrder(Order order) {
+        orders.remove(order);
+        order.setUser(null);
     }
 
     // Геттеры и сеттеры
@@ -103,6 +120,14 @@ public class User {
         this.createdAt = createdAt;
     }
 
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -111,6 +136,7 @@ public class User {
                 ", email='" + email + '\'' +
                 ", enabled=" + enabled +
                 ", role=" + (role != null ? role.getName() : "null") +
+                ", ordersCount=" + (orders != null ? orders.size() : 0) +
                 '}';
     }
 

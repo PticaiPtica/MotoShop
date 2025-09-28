@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import ru.academy.homework.motoshop.entity.RoleName;
 import ru.academy.homework.motoshop.entity.Role;
+import ru.academy.homework.motoshop.entity.RoleName;
 import ru.academy.homework.motoshop.entity.User;
 import ru.academy.homework.motoshop.repository.RoleRepository;
 import ru.academy.homework.motoshop.repository.UserRepository;
@@ -19,7 +19,7 @@ import ru.academy.homework.motoshop.repository.UserRepository;
  */
 @Component
 public class AdminInitializer implements CommandLineRunner {
-    private static final Logger logger = LoggerFactory.getLogger(AdminInitializer.class);
+   // private static final Logger logger = LoggerFactory.getLogger(AdminInitializer.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -45,14 +45,13 @@ public class AdminInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if (!adminInitEnabled) {
-            logger.info("Admin initialization is disabled");
             return;
         }
 
-        // Проверяем существование ролей и создаем их если нужно
+
         initializeRoles();
 
-        // Создаем администратора если его нет
+
         initializeAdminUser();
     }
 
@@ -61,28 +60,28 @@ public class AdminInitializer implements CommandLineRunner {
             if (!roleRepository.existsByName(roleName)) {
                 Role role = new Role(roleName);
                 roleRepository.save(role);
-                logger.info("Created role: {}", roleName);
+                // logger.info("Created role: {}", roleName);
             }
         }
     }
 
     private void initializeAdminUser() {
         if (userRepository.existsByUsername(adminUsername)) {
-            logger.info("Admin user already exists: {}", adminUsername);
+            // logger.info("Admin user already exists: {}", adminUsername);
             return;
         }
 
-        // Получаем роль администратора
+
         Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                 .orElseThrow(() -> new RuntimeException("Admin role not found"));
 
-        // Создаем пользователя администратора
+
         User adminUser = new User(adminUsername, adminEmail, passwordEncoder.encode(adminPassword));
         adminUser.setRole(adminRole);
 
         userRepository.save(adminUser);
-        logger.info("Admin user created successfully: {}", adminUsername);
-        logger.info("Default admin credentials - Username: {}, Password: {}", adminUsername, adminPassword);
-        logger.warn("Please change the default admin password immediately!");
+        // logger.info("Admin user created successfully: {}", adminUsername);
+        //  logger.info("Default admin credentials - Username: {}, Password: {}", adminUsername, adminPassword);
+        // logger.warn("Please change the default admin password immediately!");
     }
 }
