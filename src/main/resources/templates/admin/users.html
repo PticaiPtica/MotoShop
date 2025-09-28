@@ -3,152 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title th:text="${pageTitle}">Управление пользователями - MotoShop</title>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <title>Управление пользователями - MotoShop Admin</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f5f5f5;
+    :root {
+      --primary: #4361ee;
+      --secondary: #3a0ca3;
+      --success: #4cc9f0;
+      --warning: #f72585;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --border-radius: 12px;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
-    .navbar {
-      margin-bottom: 20px;
-    }
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    h1 {
-      color: #333;
-      border-bottom: 2px solid #eee;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-    }
+
     .user-card {
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 5px;
-      background: #fafafa;
-    }
-    .user-info {
-      margin-bottom: 10px;
-    }
-    .role-select {
-      width: 200px;
-      padding: 5px;
-      margin: 5px 0;
-    }
-    .btn {
-      padding: 8px 15px;
-      margin: 5px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
       border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
     }
-    .btn-primary { background: #007bff; color: white; }
-    .btn-danger { background: #dc3545; color: white; }
-    .btn-success { background: #28a745; color: white; }
-    .btn-warning { background: #ffc107; color: black; }
-    .status-enabled { color: green; font-weight: bold; }
-    .status-disabled { color: red; font-weight: bold; }
-    .loading {
-      text-align: center;
-      padding: 20px;
-      font-size: 18px;
+
+    .user-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     }
-    .search-box {
-      margin-bottom: 20px;
+
+    .role-badge {
+      font-size: 0.75rem;
+      padding: 0.35em 0.65em;
+    }
+
+    .status-badge.enabled {
+      background-color: var(--success);
+    }
+
+    .status-badge.disabled {
+      background-color: var(--gray);
+    }
+
+    .action-btn {
+      margin: 0 2px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .table th {
+      border-top: none;
+      font-weight: 600;
+      color: var(--gray);
+    }
+
+    .stats-card {
+      border: none;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
     }
   </style>
 </head>
 <body>
-<!-- Навигационная панель -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container">
-    <a class="navbar-brand" href="/admin/dashboard">🏍️ MotoShop Admin</a>
-    <div class="navbar-nav ms-auto">
-      <a class="nav-link" href="/admin/dashboard">📊 Дашборд</a>
-      <a class="nav-link active" href="/admin/users">👥 Пользователи</a>
-      <a class="nav-link" href="/admin/products">🛍️ Товары</a>
-      <a class="nav-link" href="/admin/orders">📦 Заказы</a>
-      <a class="nav-link" href="/profile">👤 Профиль</a>
-      <form action="/api/auth/logout" method="post" class="d-inline">
-        <button type="submit" class="btn btn-outline-light btn-sm">🚪 Выйти</button>
-      </form>
+    <a class="navbar-brand" href="/admin/dashboard">MotoShop Admin</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link active" href="/admin/users">
+          <i class="bi bi-people"></i> Пользователи
+        </a>
+        <a class="nav-link" href="/admin/products">
+          <i class="bi bi-bag"></i> Товары
+        </a>
+        <a class="nav-link" href="/admin/orders">
+          <i class="bi bi-box"></i> Заказы
+        </a>
+        <a class="nav-link" href="/profile">
+          <i class="bi bi-person"></i> Профиль
+        </a>
+        <button onclick="logout()" class="btn btn-outline-light btn-sm ms-2">
+          <i class="bi bi-box-arrow-right"></i> Выйти
+        </button>
+      </div>
     </div>
   </div>
 </nav>
 
-<div class="container">
-  <h1>👥 Управление пользователями</h1>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1><i class="bi bi-people"></i> Управление пользователями</h1>
+      <p class="text-muted">Всего пользователей: <span th:text="${usersCount}">1247</span></p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary" onclick="loadUsers()">
+        <i class="bi bi-arrow-clockwise"></i> Обновить
+      </button>
+    </div>
+  </div>
 
-  <!-- Поиск и фильтры -->
-  <div class="search-box">
-    <div class="row">
-      <div class="col-md-6">
-        <input type="text" id="searchInput" class="form-control" placeholder="Поиск по имени или email...">
+  <!-- Статистика по ролям -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card stats-card bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="card-title"><i class="bi bi-person"></i> Обычные пользователи</h5>
+              <h2 id="user-count">0</h2>
+            </div>
+            <i class="bi bi-people fs-1 opacity-50"></i>
+          </div>
+        </div>
       </div>
-      <div class="col-md-3">
-        <select id="roleFilter" class="form-select">
-          <option value="">Все роли</option>
+    </div>
+    <div class="col-md-4">
+      <div class="card stats-card bg-warning text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="card-title"><i class="bi bi-shield-check"></i> Модераторы</h5>
+              <h2 id="moderator-count">0</h2>
+            </div>
+            <i class="bi bi-shield-check fs-1 opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card stats-card bg-danger text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="card-title"><i class="bi bi-star"></i> Администраторы</h5>
+              <h2 id="admin-count">0</h2>
+            </div>
+            <i class="bi bi-star fs-1 opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Таблица пользователей -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0"><i class="bi bi-list-ul"></i> Список пользователей</h5>
+      <div class="d-flex gap-2">
+        <select class="form-select form-select-sm" style="width: auto;" onchange="changePageSize(this.value)">
+          <option value="10">10 на странице</option>
+          <option value="25">25 на странице</option>
+          <option value="50">50 на странице</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Имя пользователя</th>
+            <th>Email</th>
+            <th>Роль</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+          </thead>
+          <tbody id="users-table-body">
+          <tr>
+            <td colspan="6" class="text-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+              </div>
+              <p class="mt-2">Загрузка данных...</p>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Пагинация -->
+      <nav>
+        <ul class="pagination justify-content-center" id="pagination">
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно для изменения роли -->
+<div class="modal fade" id="roleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-gear"></i> Изменение роли пользователя</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Пользователь: <strong id="modal-username"></strong></p>
+        <label for="role-select" class="form-label">Выберите новую роль:</label>
+        <select class="form-select" id="role-select">
           <option value="ROLE_USER">Пользователь</option>
           <option value="ROLE_MODERATOR">Модератор</option>
           <option value="ROLE_ADMIN">Администратор</option>
         </select>
       </div>
-      <div class="col-md-3">
-        <select id="statusFilter" class="form-select">
-          <option value="">Все статусы</option>
-          <option value="true">Активные</option>
-          <option value="false">Заблокированные</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <div id="loading" class="loading">Загрузка пользователей...</div>
-  <div id="users-list" style="display: none;"></div>
-  <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-
-  <!-- Статистика -->
-  <div class="row mt-4" id="stats" style="display: none;">
-    <div class="col-md-3">
-      <div class="card text-white bg-primary">
-        <div class="card-body">
-          <h5>Всего пользователей</h5>
-          <h3 id="totalUsers">0</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-white bg-success">
-        <div class="card-body">
-          <h5>Активных</h5>
-          <h3 id="activeUsers">0</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-white bg-warning">
-        <div class="card-body">
-          <h5>Администраторов</h5>
-          <h3 id="adminUsers">0</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-white bg-info">
-        <div class="card-body">
-          <h5>Модераторов</h5>
-          <h3 id="moderatorUsers">0</h3>
-        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary" onclick="confirmRoleChange()">
+          <i class="bi bi-check-lg"></i> Сохранить
+        </button>
       </div>
     </div>
   </div>
@@ -156,146 +224,228 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  const API_BASE = '/api/admin';
+  let currentPage = 0;
+  let pageSize = 10;
+  let currentEditingUserId = null;
 
-  // Получаем токен из cookie
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
-
-  let authToken = getCookie('jwtToken') || localStorage.getItem('authToken');
-  let allUsers = [];
-
-  // Загрузка пользователей при загрузке страницы
+  // Загрузка данных при открытии страницы
   document.addEventListener('DOMContentLoaded', function() {
-    if (!authToken) {
-      window.location.href = '/api/auth/login';
-      return;
-    }
     loadUsers();
-
-    // Настройка поиска и фильтров
-    document.getElementById('searchInput').addEventListener('input', filterUsers);
-    document.getElementById('roleFilter').addEventListener('change', filterUsers);
-    document.getElementById('statusFilter').addEventListener('change', filterUsers);
+    loadRolesStats();
   });
 
-  async function loadUsers() {
+  // Загрузка списка пользователей
+  async function loadUsers(page = 0) {
+    currentPage = page;
     try {
-      const response = await axios.get(`${API_BASE}/users`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('users-list').style.display = 'block';
-      document.getElementById('stats').style.display = 'flex';
-
-      allUsers = response.data;
-      displayUsers(allUsers);
-      updateStats(allUsers);
-
-    } catch (error) {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('error-message').style.display = 'block';
-      document.getElementById('error-message').textContent =
-              'Ошибка загрузки пользователей: ' + (error.response?.data?.message || error.message);
-
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        setTimeout(() => {
-          window.location.href = '/api/auth/login';
-        }, 2000);
+      const response = await fetch(`/admin/users/api?page=${page}&size=${pageSize}`);
+      if (!response.ok) {
+        throw new Error('Ошибка сервера: ' + response.status);
       }
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      renderUsersTable(data.users);
+      renderPagination(data.currentPage, data.totalPages);
+    } catch (error) {
+      console.error('Ошибка загрузки пользователей:', error);
+      showError('Ошибка загрузки данных: ' + error.message);
     }
   }
 
-  function filterUsers() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const roleFilter = document.getElementById('roleFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
+  // Загрузка статистики по ролям
+  async function loadRolesStats() {
+    try {
+      const response = await fetch('/admin/users/api/roles-stats');
+      if (!response.ok) {
+        throw new Error('Ошибка сервера: ' + response.status);
+      }
+      const data = await response.json();
 
-    const filteredUsers = allUsers.filter(user => {
-      const matchesSearch = user.username.toLowerCase().includes(searchTerm) ||
-              user.email.toLowerCase().includes(searchTerm);
-      const matchesRole = !roleFilter || user.role === roleFilter;
-      const matchesStatus = statusFilter === '' || user.enabled.toString() === statusFilter;
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-
-    displayUsers(filteredUsers);
+      document.getElementById('user-count').textContent = data.rolesStats.ROLE_USER || 0;
+      document.getElementById('moderator-count').textContent = data.rolesStats.ROLE_MODERATOR || 0;
+      document.getElementById('admin-count').textContent = data.rolesStats.ROLE_ADMIN || 0;
+    } catch (error) {
+      console.error('Ошибка загрузки статистики:', error);
+      showError('Ошибка загрузки статистики: ' + error.message);
+    }
   }
 
-  function updateStats(users) {
-    document.getElementById('totalUsers').textContent = users.length;
-    document.getElementById('activeUsers').textContent = users.filter(u => u.enabled).length;
-    document.getElementById('adminUsers').textContent = users.filter(u => u.role === 'ROLE_ADMIN').length;
-    document.getElementById('moderatorUsers').textContent = users.filter(u => u.role === 'ROLE_MODERATOR').length;
-  }
-
-  function displayUsers(users) {
-    const usersList = document.getElementById('users-list');
-    usersList.innerHTML = '';
+  // Отображение таблицы пользователей
+  function renderUsersTable(users) {
+    const tbody = document.getElementById('users-table-body');
 
     if (users.length === 0) {
-      usersList.innerHTML = '<div class="alert alert-info">Пользователи не найдены</div>';
+      tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2">Пользователи не найдены</p>
+                        </td>
+                    </tr>
+                `;
       return;
     }
 
+    tbody.innerHTML = '';
+
     users.forEach(user => {
-      const userCard = document.createElement('div');
-      userCard.className = 'user-card';
-      userCard.innerHTML = `
-                    <div class="user-info">
-                        <strong>ID:</strong> ${user.id} |
-                        <strong>Имя:</strong> ${user.username} |
-                        <strong>Email:</strong> ${user.email} |
-                        <strong>Роль:</strong>
-                        <span class="badge ${getRoleBadgeClass(user.role)}">${getRoleDisplayName(user.role)}</span> |
-                        <strong>Статус:</strong>
-                        <span class="status-${user.enabled ? 'enabled' : 'disabled'}">
-                            ${user.enabled ? '✅ Активен' : '❌ Заблокирован'}
+      const row = document.createElement('tr');
+      row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="badge role-badge bg-${getRoleBadgeColor(user.role)}">
+                            ${getRoleDisplayName(user.role)}
                         </span>
-                    </div>
-
-                    <div class="mt-2">
-                        <strong>Изменить роль:</strong>
-                        <select class="role-select form-select" id="role-${user.id}">
-                            <option value="ROLE_USER" ${user.role === 'ROLE_USER' ? 'selected' : ''}>👤 Пользователь</option>
-                            <option value="ROLE_MODERATOR" ${user.role === 'ROLE_MODERATOR' ? 'selected' : ''}>🛡️ Модератор</option>
-                            <option value="ROLE_ADMIN" ${user.role === 'ROLE_ADMIN' ? 'selected' : ''}>⚡ Администратор</option>
-                        </select>
-                    </div>
-
-                    <div class="mt-2">
-                        <button class="btn btn-primary" onclick="updateRole(${user.id})">💾 Обновить роль</button>
-                        <button class="btn ${user.enabled ? 'btn-warning' : 'btn-success'}"
-                                onclick="toggleStatus(${user.id})">
-                            ${user.enabled ? '🚫 Заблокировать' : '✅ Разблокировать'}
+                    </td>
+                    <td>
+                        <span class="badge status-badge ${user.enabled ? 'enabled' : 'disabled'}">
+                            ${user.enabled ? 'Активен' : 'Неактивен'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary action-btn"
+                                onclick="openRoleModal(${user.id}, '${user.username}', '${user.role}')"
+                                title="Изменить роль">
+                            <i class="bi bi-person-gear"></i>
                         </button>
-                        <button class="btn btn-danger" onclick="deleteUser(${user.id})">🗑️ Удалить</button>
-                    </div>
-                    <hr>
+                        <button class="btn btn-sm ${user.enabled ? 'btn-outline-warning' : 'btn-outline-success'} action-btn"
+                                onclick="toggleUserStatus(${user.id}, ${user.enabled})"
+                                title="${user.enabled ? 'Деактивировать' : 'Активировать'}">
+                            <i class="bi ${user.enabled ? 'bi-person-x' : 'bi-person-check'}"></i>
+                        </button>
+                    </td>
                 `;
-      usersList.appendChild(userCard);
+      tbody.appendChild(row);
     });
   }
 
-  function getRoleBadgeClass(role) {
-    switch(role) {
-      case 'ROLE_ADMIN': return 'bg-danger';
-      case 'ROLE_MODERATOR': return 'bg-warning';
-      case 'ROLE_USER': return 'bg-primary';
-      default: return 'bg-secondary';
+  // Отображение пагинации
+  function renderPagination(currentPage, totalPages) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    // Кнопка "Назад"
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 0 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#" onclick="loadUsers(${currentPage - 1})">Назад</a>`;
+    pagination.appendChild(prevLi);
+
+    // Номера страниц
+    const startPage = Math.max(0, currentPage - 2);
+    const endPage = Math.min(totalPages - 1, currentPage + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+      const li = document.createElement('li');
+      li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+      li.innerHTML = `<a class="page-link" href="#" onclick="loadUsers(${i})">${i + 1}</a>`;
+      pagination.appendChild(li);
+    }
+
+    // Кнопка "Вперед"
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#" onclick="loadUsers(${currentPage + 1})">Вперед</a>`;
+    pagination.appendChild(nextLi);
+  }
+
+  // Изменение размера страницы
+  function changePageSize(newSize) {
+    pageSize = parseInt(newSize);
+    loadUsers(0);
+  }
+
+  // Открытие модального окна для изменения роли
+  function openRoleModal(userId, username, currentRole) {
+    currentEditingUserId = userId;
+    document.getElementById('modal-username').textContent = username;
+    document.getElementById('role-select').value = currentRole;
+
+    const modal = new bootstrap.Modal(document.getElementById('roleModal'));
+    modal.show();
+  }
+
+  // Подтверждение изменения роли
+  async function confirmRoleChange() {
+    const newRole = document.getElementById('role-select').value;
+
+    try {
+      const response = await fetch(`/admin/users/api/${currentEditingUserId}/role`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `newRole=${newRole}`
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        showSuccess(result.message);
+        bootstrap.Modal.getInstance(document.getElementById('roleModal')).hide();
+        loadUsers(currentPage);
+        loadRolesStats();
+      } else {
+        showError(result.message);
+      }
+    } catch (error) {
+      showError('Ошибка при изменении роли: ' + error.message);
+    }
+  }
+
+  // Переключение статуса пользователя
+  async function toggleUserStatus(userId, currentStatus) {
+    const newStatus = !currentStatus;
+    const confirmMessage = newStatus ?
+            'Активировать пользователя?' : 'Деактивировать пользователя?';
+
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      const response = await fetch(`/admin/users/api/${userId}/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `active=${newStatus}`
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        showSuccess(result.message);
+        loadUsers(currentPage);
+      } else {
+        showError(result.message);
+      }
+    } catch (error) {
+      showError('Ошибка при изменении статуса: ' + error.message);
+    }
+  }
+
+  // Вспомогательные функции
+  function getRoleBadgeColor(role) {
+    switch (role) {
+      case 'ROLE_ADMIN': return 'danger';
+      case 'ROLE_MODERATOR': return 'warning';
+      case 'ROLE_USER': return 'secondary';
+      default: return 'secondary';
     }
   }
 
   function getRoleDisplayName(role) {
-    switch(role) {
+    switch (role) {
       case 'ROLE_ADMIN': return 'Администратор';
       case 'ROLE_MODERATOR': return 'Модератор';
       case 'ROLE_USER': return 'Пользователь';
@@ -303,48 +453,35 @@
     }
   }
 
-  async function updateRole(userId) {
-    const select = document.getElementById(`role-${userId}`);
-    const selectedRole = select.value;
-
-    try {
-      const response = await axios.put(`${API_BASE}/users/${userId}/role`,
-              { role: selectedRole },
-              { headers: { 'Authorization': `Bearer ${authToken}` } }
-      );
-      alert(response.data.message || 'Роль успешно обновлена!');
-      loadUsers(); // Перезагружаем список
-    } catch (error) {
-      alert('Ошибка обновления роли: ' + (error.response?.data?.message || error.message));
-    }
+  // Уведомления
+  function showSuccess(message) {
+    showAlert(message, 'success');
   }
 
-  async function toggleStatus(userId) {
-    try {
-      const response = await axios.put(`${API_BASE}/users/${userId}/status`,
-              {},
-              { headers: { 'Authorization': `Bearer ${authToken}` } }
-      );
-      alert(response.data.message || 'Статус пользователя изменен!');
-      loadUsers(); // Перезагружаем список
-    } catch (error) {
-      alert('Ошибка изменения статуса: ' + (error.response?.data?.message || error.message));
-    }
+  function showError(message) {
+    showAlert(message, 'danger');
   }
 
-  async function deleteUser(userId) {
-    if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-      return;
-    }
+  function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+    document.body.appendChild(alertDiv);
 
-    try {
-      const response = await axios.delete(`${API_BASE}/users/${userId}`, {
-        headers: { 'Authorization': `Bearer ${authToken}` }
-      });
-      alert(response.data.message || 'Пользователь удален!');
-      loadUsers(); // Перезагружаем список
-    } catch (error) {
-      alert('Ошибка удаления пользователя: ' + (error.response?.data?.message || error.message));
+    setTimeout(() => {
+      if (alertDiv.parentNode) {
+        alertDiv.parentNode.removeChild(alertDiv);
+      }
+    }, 5000);
+  }
+
+  function logout() {
+    if (confirm('Вы уверены, что хотите выйти?')) {
+      window.location.href = '/logout';
     }
   }
 </script>

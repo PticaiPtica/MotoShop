@@ -1,12 +1,10 @@
-package ru.academy.homework.motoshop.controlles;
+package ru.academy.homework.motoshop.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import ru.academy.homework.motoshop.model.Category;
-import ru.academy.homework.motoshop.repository.CategoryRepository;
 import ru.academy.homework.motoshop.services.CategoryService;
 
 import java.util.List;
@@ -20,12 +18,14 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<Category>> getAllCategories() {
         List<Category> categories = categoryService.findAll();
         return ResponseEntity.ok(categories);
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
         Optional<Category> category = categoryService.findById(id);
         return category.map(ResponseEntity::ok)

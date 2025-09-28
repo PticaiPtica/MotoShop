@@ -1,209 +1,47 @@
 package ru.academy.homework.motoshop.services;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import ru.academy.homework.motoshop.model.Product;
 
-import java.math.BigDecimal;
+
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Сервис для управления товарами.
- * Предоставляет методы для CRUD операций, работы с изображениями, атрибутами и управления запасами.
- */
 public interface ProductService {
 
-    // ========== ОСНОВНЫЕ CRUD ОПЕРАЦИИ ==========
-
-    /**
-     * Получить все товары (без деталей)
-     * @return список всех товаров без изображений и атрибутов
-     */
+    // Основные CRUD операции
     List<Product> getAllProducts();
-
-
-    /**
-     * Найти товар по ID (без деталей)
-     * @param id идентификатор товара
-     * @return Optional с товаром, если найден
-     */
+    Page<Product> getAllProducts(Pageable pageable);
     Optional<Product> getProductById(Long id);
-
-
-    /**
-     * Проверить существование товара по идентификатору
-     * @param id идентификатор товара
-     * @return true если товар существует
-     */
-    boolean existsById(Long id);
-
-    /**
-     * Сохранить новый товар
-     * @param product товар для сохранения
-     * @return сохраненный товар
-     */
     Product saveProduct(Product product);
-
-    /**
-     * Обновить основную информацию о товаре
-     * @param id идентификатор товара
-     * @param productDetails новые данные товара
-     * @return обновленный товар
-     */
     Product updateProduct(Long id, Product productDetails);
-
-
-    /**
-     * Обновить количество товара на складе
-     * @param id идентификатор товара
-     * @param quantity новое количество
-     * @return товар с обновленным количеством
-     */
-    Product updateProductQuantity(Long id, int quantity);
-
-    /**
-     * Обновить цену товара
-     * @param id идентификатор товара
-     * @param price новая цена
-     * @return товар с обновленной ценой
-     */
-    Product updateProductPrice(Long id, BigDecimal price);
-
-    /**
-     * Удалить товар по ID
-     * @param id идентификатор товара для удаления
-     */
     void deleteProduct(Long id);
+    Page<Product> findAll(Pageable pageable);
+    Optional<Product> findById(Long id);
+    void save(Product product);
+    void deleteById(Long id);
 
-    // ========== ПОИСК И ФИЛЬТРАЦИЯ ==========
-
-    /**
-     * Поиск товаров по названию (без учета регистра)
-     * @param name часть названия для поиска
-     * @return список товаров, содержащих указанную строку в названии
-     */
+    // Поиск и фильтрация
     List<Product> searchProductsByName(String name);
-
-    /**
-     * Поиск товаров в ценовом диапазоне
-     * @param minPrice минимальная цена
-     * @param maxPrice максимальная цена
-     * @return список товаров в указанном ценовом диапазоне
-     */
-    List<Product> findProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
-
-    /**
-     * Поиск товаров по категории
-     * @param categoryId идентификатор категории
-     * @return список товаров в указанной категории
-     */
+    List<Product> findProductsByPriceRange(Double minPrice, Double maxPrice);
     List<Product> findProductsByCategory(Long categoryId);
-
-    /**
-     * Поиск товаров с низким запасом
-     * @param threshold пороговое значение количества
-     * @return список товаров, количество которых меньше порога
-     */
+    List<Product> findActiveProducts();
     List<Product> findLowStockProducts(int threshold);
 
-    /**
-     * Поиск доступных товаров (в наличии)
-     * @return список товаров с количеством > 0
-     */
-    List<Product> findAvailableProducts();
-
-    /**
-     * Поиск товаров по категории и ценовому диапазону
-     * @param categoryId идентификатор категории
-     * @param minPrice минимальная цена
-     * @param maxPrice максимальная цена
-     * @return список товаров, удовлетворяющих обоим критериям
-     */
-    List<Product> findProductsByCategoryAndPriceRange(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice);
-
-
-
-
-    // ========== УПРАВЛЕНИЕ ЗАПАСАМИ ==========
-
-    /**
-     * Увеличить количество товара на указанное значение
-     * @param productId идентификатор товара
-     * @param amount количество для увеличения
-     */
-    void increaseProductQuantity(Long productId, int amount);
-
-    /**
-     * Уменьшить количество товара на указанное значение
-     * @param productId идентификатор товара
-     * @param amount количество для уменьшения
-     */
-    void decreaseProductQuantity(Long productId, int amount);
-
-    // ========== ДОПОЛНИТЕЛЬНЫЕ МЕТОДЫ ==========
-
-    /**
-     * Получить общее количество товаров
-     * @return общее количество товаров в системе
-     */
+    // Статистика
     long getTotalProductsCount();
+    long getActiveProductsCount();
+    long getOutOfStockProductsCount();
+    long getLowStockProductsCount(int threshold);
 
-    /**
-     * Получить количество товаров в категории
-     * @param categoryId идентификатор категории
-     * @return количество товаров в категории
-     */
-    long getProductsCountByCategory(Long categoryId);
+    // Бизнес-логика
+    void decreaseStock(Long productId, Integer quantity);
+    void increaseStock(Long productId, Integer quantity);
 
-    /**
-     * Получить товары с сортировкой по цене (по возрастанию)
-     * @return отсортированный список товаров
-     */
-    List<Product> getProductsSortedByPriceAsc();
+    Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
 
-    /**
-     * Получить товары с сортировкой по цене (по убыванию)
-     * @return отсортированный список товаров
-     */
-    List<Product> getProductsSortedByPriceDesc();
+    Object findAllProducts();
 
-    /**
-     * Получить товары с сортировкой по названию
-     * @return отсортированный список товаров
-     */
-    List<Product> getProductsSortedByName();
-
-    /**
-     * Найти все товары по списку идентификаторов
-     * @param ids список идентификаторов товаров
-     * @return список найденных товаров
-     */
-    List<Product> findAllById(Iterable<Long> ids);
-
-    /**
-     * Сохранить список товаров
-     * @param products список товаров для сохранения
-     * @return список сохраненных товаров
-     */
-    List<Product> saveAll(Iterable<Product> products);
-
-    /**
-     * Получить среднюю цену товаров в категории
-     * @param categoryId идентификатор категории
-     * @return средняя цена товаров
-     */
-    BigDecimal getAveragePriceByCategory(Long categoryId);
-
-    /**
-     * Получить самый дорогой товар в категории
-     * @param categoryId идентификатор категории
-     * @return самый дорогой товар
-     */
-    Optional<Product> getMostExpensiveProductInCategory(Long categoryId);
-
-    /**
-     * Получить самый дешевый товар в категории
-     * @param categoryId идентификатор категории
-     * @return самый дешевый товар
-     */
-    Optional<Product> getCheapestProductInCategory(Long categoryId);
+    Object findAllProductsById(Long categoryId);
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MotoGear – магазин мотоэкипировки</title>
-    <link href="https://fonts.googleapis.com/css2?family=Babas+Nee&family=Roboto:wght@400;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap"
           rel="stylesheet">
     <style>
         /* Reset and base styles */
@@ -19,6 +19,7 @@
             line-height: 1.6;
             color: #333;
             background-color: #fff;
+            padding-top: 80px;
         }
 
         .container {
@@ -98,6 +99,31 @@
             color: #ff6b35;
         }
 
+        /* Стили для сообщений */
+        .logout-message {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
         /* Hero section */
         .hero {
             background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/images/hero-bg.jpg');
@@ -105,8 +131,8 @@
             background-position: center;
             color: white;
             text-align: center;
-            padding: 8rem 0 4rem;
-            margin-top: 80px;
+            padding: 6rem 0 3rem;
+            margin-top: 0;
         }
 
         .hero h1 {
@@ -135,6 +161,7 @@
 
         .btn:hover {
             background: #e55a2b;
+            transform: translateY(-2px);
         }
 
         /* Categories section */
@@ -277,6 +304,10 @@
                 padding: 0;
                 border: none;
             }
+
+            body {
+                padding-top: 120px;
+            }
         }
 
         .sr-only {
@@ -300,20 +331,25 @@
             <div class="logo">Moto<span>Gear</span></div>
             <nav class="nav">
                 <a href="/">Главная</a>
-                <a href="/categories">Каталог</a>
+                <a href="/catalog">Каталог</a>
                 <a href="#" class="cart-icon">
                     <span aria-hidden="true">🛒</span>
                     <span class="sr-only">Корзина</span>
                     <span>(0)</span>
                 </a>
             </nav>
-            <div class="auth-section" th:if="${#authorization.expression('isAuthenticated() and !isAnonymous()')}">
-                <span>Добро пожаловать, <span th:text="${#authentication.name}"></span>!</span>
-                <a th:href="@{/api/auth/logout}">Выйти</a>
+
+            <!-- Блок для аутентифицированных пользователей -->
+            <div class="auth-section" id="auth-authenticated" style="display: none;">
+                <span>Добро пожаловать, <span id="username"></span>!</span>
+                <a href="/api/auth/logout" class="btn btn-logout" onclick="logout(event)">Выйти</a>
             </div>
-            <div class="auth-section" th:unless="${#authorization.expression('isAuthenticated() and !isAnonymous()')}">
-                <a th:href="@{/api/auth/login}">Войти</a>
-                <a th:href="@{/api/auth/register}">Регистрация</a>
+
+            <!-- Блок для неаутентифицированных пользователей -->
+            <div class="auth-section" id="auth-not-authenticated" style="display: none;">
+                <a href="/api/auth/login">Войти</a>
+                <span>|</span>
+                <a href="/api/auth/register">Регистрация</a>
             </div>
         </div>
     </div>
@@ -324,7 +360,7 @@
     <div class="container">
         <h1>Экипировка для настоящих байкеров</h1>
         <p>Шлемы, куртки, защита и аксессуары</p>
-        <a href="/categories" class="btn">В каталог</a>
+        <a href="/catalog" class="btn">В каталог</a>
     </div>
 </section>
 
@@ -334,7 +370,7 @@
         <h2 id="categories-heading">Категории</h2>
         <div class="category-grid">
             <!-- Динамические категории из базы данных -->
-            <a th:href="@{'/products?categoryId=' + ${category.id}}" th:each="category : ${categories}"
+            <a th:href="@{'/catalog?categoryId=' + ${category.id}}" th:each="category : ${categories}"
                class="category-card">
                 <div class="category-image-container">
                     <img th:src="${category.imageUrl != null ? category.imageUrl : '/images/default-category.jpg'}"
@@ -354,5 +390,156 @@
         <p>© 2025 MotoGear. Все права защищены.</p>
     </div>
 </footer>
+
+<script>
+    let authCheckInterval;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        checkAuthStatus();
+
+        // Запускаем периодическую проверку и сохраняем ID интервала
+        authCheckInterval = setInterval(checkAuthStatus, 30000);
+
+        // Показываем сообщение о выходе, если есть параметр
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('logout')) {
+            showLogoutMessage();
+            // Убираем параметр из URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    });
+
+
+    async function checkAuthStatus() {
+        try {
+            // Добавляем timestamp для предотвращения кэширования
+            const response = await fetch('/api/auth/validate?t=' + Date.now(), {
+                headers: {
+                    'Cache-Control': 'no-cache'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Auth response:', data);
+
+            // Проверяем несколько возможных форматов ответа
+            const isAuthenticated = data.status === 'valid' || data.authenticated === true;
+
+            if (isAuthenticated) {
+                const username = data.username || data.user || 'Пользователь';
+                showAuthenticatedUI(username);
+
+                // ТОЛЬКО если мы не на главной странице И не в процессе выхода
+                const currentPath = window.location.pathname;
+                if (currentPath !== '/' && !currentPath.includes('/index')) {
+                    const isAdmin = data.roles && data.roles.some(role =>
+                        role.includes('ADMIN') || role.includes('ROLE_ADMIN'));
+                    const isModerator = data.roles && data.roles.some(role =>
+                        role.includes('MODERATOR') || role.includes('ROLE_MODERATOR'));
+
+                    if (isAdmin && !currentPath.includes('/admin')) {
+                        console.log('Redirecting admin to dashboard');
+                        window.location.href = '/admin/dashboard';
+                    } else if (isModerator && !currentPath.includes('/moderator')) {
+                        console.log('Redirecting moderator to dashboard');
+                        window.location.href = '/moderator/dashboard';
+                    }
+                }
+            } else {
+                showNotAuthenticatedUI();
+            }
+        } catch (error) {
+            console.log('Auth check failed:', error);
+            showNotAuthenticatedUI();
+        }
+    }
+
+    function showAuthenticatedUI(username) {
+        document.getElementById('auth-authenticated').style.display = 'flex';
+        document.getElementById('auth-not-authenticated').style.display = 'none';
+        document.getElementById('username').textContent = username;
+    }
+
+    function showNotAuthenticatedUI() {
+        document.getElementById('auth-authenticated').style.display = 'none';
+        document.getElementById('auth-not-authenticated').style.display = 'flex';
+    }
+
+    function logout(event) {
+        event.preventDefault();
+
+        if (confirm('Вы уверены, что хотите выйти?')) {
+            // НЕМЕДЛЕННО показываем UI неаутентифицированного пользователя
+            showNotAuthenticatedUI();
+
+            // Останавливаем интервал проверки авторизации
+            if (authCheckInterval) {
+                clearInterval(authCheckInterval);
+            }
+
+            // Очищаем хранилища
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Делаем запрос на выход
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
+                credentials: 'include'
+            })
+                .then(response => {
+                    console.log('Logout response status:', response.status);
+                    // Редирект на главную с параметром
+                    window.location.href = '/?logout=true&t=' + Date.now();
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    // Все равно делаем редирект
+                    window.location.href = '/?logout=true&t=' + Date.now();
+                });
+        }
+    }
+
+    function clearAllIntervals() {
+        const maxIntervalId = setTimeout(() => {
+        }, 0);
+        for (let i = 1; i < maxIntervalId; i++) {
+            clearInterval(i);
+        }
+    }
+
+    function clearAllStorages() {
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Пытаемся очистить куки (если не httpOnly)
+        document.cookie.split(";").forEach(function (c) {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+
+        function showLogoutMessage() {
+            const message = document.createElement('div');
+            message.className = 'logout-message';
+            message.textContent = 'Вы успешно вышли из системы';
+            document.body.appendChild(message);
+
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.parentNode.removeChild(message);
+                }
+            }, 3000);
+        }
+    }
+
+
+</script>
 </body>
 </html>

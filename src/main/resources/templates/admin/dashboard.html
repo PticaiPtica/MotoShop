@@ -3,343 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Управление пользователями - MotoShop</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>Панель управления - MotoShop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
-        /* Стили остаются без изменений */
+        /* Ваши стили остаются без изменений */
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        .navbar {
-            margin-bottom: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: #f5f7fb;
             color: #333;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            line-height: 1.6;
         }
-        .user-card {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-            background: #fafafa;
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: var(--shadow);
+            padding: 1rem 0;
         }
-        .user-info {
-            margin-bottom: 10px;
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
         }
-        .role-select {
-            width: 200px;
-            padding: 5px;
-            margin: 5px 0;
+
+        .nav-link {
+            font-weight: 500;
+            margin: 0 0.5rem;
+            border-radius: 8px;
+            transition: var(--transition);
         }
-        .btn {
-            padding: 8px 15px;
-            margin: 5px;
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dashboard-header {
+            margin: 2rem 0;
+        }
+
+        .dashboard-header h1 {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .card {
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
         }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-warning { background: #ffc107; color: black; }
-        .status-enabled { color: green; font-weight: bold; }
-        .status-disabled { color: red; font-weight: bold; }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 18px;
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
-        .alert { display: none; }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-title i {
+            margin-right: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .card-text {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .btn-light {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .btn-light:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .bg-primary {
+            background: linear-gradient(135deg, var(--primary), #5a7cff) !important;
+        }
+
+        .bg-success {
+            background: linear-gradient(135deg, var(--success), #6bd4f5) !important;
+        }
+
+        .bg-warning {
+            background: linear-gradient(135deg, var(--warning), #ff4d9d) !important;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar-nav {
+                margin-top: 1rem;
+            }
+
+            .nav-link {
+                margin: 0.25rem 0;
+            }
+        }
     </style>
 </head>
 <body>
-<!-- Навигационная панель -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
         <a class="navbar-brand" href="/admin/dashboard">MotoShop Admin</a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link active" href="/admin/users">👥 Пользователи</a>
-            <a class="nav-link" href="/admin/products">🛍️ Товары</a>
-            <a class="nav-link" href="/admin/orders">📦 Заказы</a>
-            <a class="nav-link" href="/profile">👤 Профиль</a>
-            <button onclick="logout()" class="btn btn-outline-light btn-sm">🚪 Выйти</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link active" href="/admin/users">
+                    <i class="bi bi-people"></i> Пользователи
+                </a>
+                <a class="nav-link" href="/admin/products">
+                    <i class="bi bi-bag"></i> Товары
+                </a>
+                <a class="nav-link" href="/admin/orders">
+                    <i class="bi bi-box"></i> Заказы
+                </a>
+                <a class="nav-link" href="/profile">
+                    <i class="bi bi-person"></i> Профиль
+                </a>
+                <button onclick="logout()" class="btn logout-btn ms-2">Выйти</button>
+            </div>
         </div>
     </div>
 </nav>
 
 <div class="container">
-    <h1>🛠️ Управление пользователями</h1>
+    <div class="dashboard-header">
+        <h1>Панель управления</h1>
+        <p>Обзор статистики и быстрый доступ к управлению системой</p>
+    </div>
 
-    <div id="auth-check" class="alert alert-info">Проверка авторизации...</div>
-    <div id="loading" class="loading" style="display: none;">Загрузка пользователей...</div>
-    <div id="users-list" style="display: none;"></div>
-    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+    <div class="stats-grid">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-people"></i> Пользователи
+                </h5>
+                <p class="card-text" id="users-count">
+                    <span class="loading-spinner"></span> Загрузка...
+                </p>
+                <a href="/admin/users" class="btn btn-light">Управлять</a>
+            </div>
+        </div>
+
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-bag"></i> Товары
+                </h5>
+                <p class="card-text" id="products-count">
+                    <span class="loading-spinner"></span> Загрузка...
+                </p>
+                <a href="/admin/products" class="btn btn-light">Управлять</a>
+            </div>
+        </div>
+
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-box"></i> Заказы
+                </h5>
+                <p class="card-text" id="orders-count">
+                    <span class="loading-spinner"></span> Загрузка...
+                </p>
+                <a href="/admin/orders" class="btn btn-light">Управлять</a>
+            </div>
+        </div>
+    </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    const API_BASE = '/api/admin';
-    const AUTH_API = '/api/auth';
+    // Загрузка реальных данных при открытии страницы
+    document.addEventListener('DOMContentLoaded', function () {
+        loadDashboardStats();
+    });
 
-    // Функция для получения JWT токена
-    function getJwtToken() {
-        // Попробуем получить токен из разных мест
-        return localStorage.getItem('jwtToken') ||
-            sessionStorage.getItem('jwtToken') ||
-            getCookie('jwtToken');
-    }
-
-    // Функция для получения cookie
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) {
-            return parts.pop().split(';').shift();
-        }
-        return null;
-    }
-
-    // Функция создания заголовков с JWT токеном
-    function createAuthHeaders() {
-        const token = getJwtToken();
-        if (!token) {
-            throw new Error('JWT token not found');
-        }
-
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        };
-    }
-
-    // Проверка авторизации перед загрузкой страницы
-    async function checkAuth() {
-        const authCheck = document.getElementById('auth-check');
-        authCheck.style.display = 'block';
-
+    // Загрузка статистики с сервера
+    async function loadDashboardStats() {
         try {
-            const token = getJwtToken();
-            if (!token) {
-                throw new Error('No JWT token found');
-            }
-
-            // Проверяем валидность токена через API с JWT в заголовке
-            const response = await fetch(`${AUTH_API}/validate`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
+            const response = await fetch('/admin/dashboard/api/stats');
             if (!response.ok) {
-                throw new Error('Not authenticated');
+                throw new Error('Ошибка загрузки данных: ' + response.status);
             }
 
-            // Если авторизация успешна, скрываем сообщение и загружаем пользователей
-            authCheck.style.display = 'none';
-            loadUsers();
+            const data = await response.json();
+
+            // Обновляем счетчики на странице
+            document.getElementById('users-count').innerHTML = formatNumber(data.usersCount);
+            document.getElementById('products-count').innerHTML = formatNumber(data.productsCount);
+            document.getElementById('orders-count').innerHTML = formatNumber(data.ordersCount);
 
         } catch (error) {
-            console.error('Auth check failed:', error);
-            authCheck.innerHTML = '❌ Ошибка авторизации. Перенаправление на страницу входа...';
-            authCheck.className = 'alert alert-warning';
+            console.error('Ошибка загрузки статистики:', error);
 
-            setTimeout(() => {
-                window.location.href = '/api/auth/login';
-            }, 2000);
+            // Показываем сообщение об ошибке
+            showCountError('users-count');
+            showCountError('products-count');
+            showCountError('orders-count');
+
+            // Показываем уведомление об ошибке
+            showError('Не удалось загрузить статистику: ' + error.message);
         }
     }
 
-    // Загрузка пользователей
-    async function loadUsers() {
-        const loading = document.getElementById('loading');
-        const usersList = document.getElementById('users-list');
-        const errorMessage = document.getElementById('error-message');
-
-        loading.style.display = 'block';
-        errorMessage.style.display = 'none';
-
-        try {
-            const response = await fetch(`${API_BASE}/users`, {
-                method: 'GET',
-                headers: createAuthHeaders()
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
-            }
-
-            const users = await response.json();
-
-            loading.style.display = 'none';
-            usersList.style.display = 'block';
-            displayUsers(users);
-
-        } catch (error) {
-            console.error('Load users error:', error);
-            loading.style.display = 'none';
-            errorMessage.style.display = 'block';
-            errorMessage.textContent = `Ошибка загрузки пользователей: ${error.message}`;
-
-            if (error.message.includes('401') || error.message.includes('403') || error.message.includes('JWT token')) {
-                setTimeout(() => {
-                    window.location.href = '/api/auth/login';
-                }, 3000);
-            }
-        }
+    function showCountError(elementId) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = '<span class="text-warning" title="Ошибка загрузки">-</span>';
     }
 
-    function displayUsers(users) {
-        const usersList = document.getElementById('users-list');
-        usersList.innerHTML = '';
-
-        if (!users || users.length === 0) {
-            usersList.innerHTML = '<div class="alert alert-info">Пользователи не найдены</div>';
-            return;
-        }
-
-        users.forEach(user => {
-            const userCard = document.createElement('div');
-            userCard.className = 'user-card';
-            userCard.innerHTML = `
-                <div class="user-info">
-                    <strong>ID:</strong> ${user.id} |
-                    <strong>Имя:</strong> ${user.username} |
-                    <strong>Email:</strong> ${user.email} |
-                    <strong>Роль:</strong> ${user.role} |
-                    <strong>Статус:</strong>
-                    <span class="status-${user.enabled ? 'enabled' : 'disabled'}">
-                        ${user.enabled ? '✅ Активен' : '❌ Заблокирован'}
-                    </span>
-                </div>
-
-                <div class="mt-2">
-                    <strong>Изменить роль:</strong>
-                    <select class="role-select form-select" id="role-${user.id}">
-                        <option value="ROLE_USER" ${user.role === 'ROLE_USER' ? 'selected' : ''}>👤 Пользователь</option>
-                        <option value="ROLE_MODERATOR" ${user.role === 'ROLE_MODERATOR' ? 'selected' : ''}>🛡️ Модератор</option>
-                        <option value="ROLE_ADMIN" ${user.role === 'ROLE_ADMIN' ? 'selected' : ''}>⚡ Администратор</option>
-                    </select>
-                </div>
-
-                <div class="mt-2">
-                    <button class="btn btn-primary" onclick="updateRole(${user.id})">💾 Обновить роль</button>
-                    <button class="btn ${user.enabled ? 'btn-warning' : 'btn-success'}"
-                            onclick="toggleStatus(${user.id})">
-                        ${user.enabled ? '🚫 Заблокировать' : '✅ Разблокировать'}
-                    </button>
-                    <button class="btn btn-danger" onclick="deleteUser(${user.id})">🗑️ Удалить</button>
-                </div>
-                <hr>
-            `;
-            usersList.appendChild(userCard);
-        });
+    // Форматирование чисел с разделителями тысяч
+    function formatNumber(num) {
+        return new Intl.NumberFormat('ru-RU').format(num);
     }
 
-    async function updateRole(userId) {
-        const select = document.getElementById(`role-${userId}`);
-        const selectedRole = select.value;
+    // Функция для показа уведомлений об ошибках
+    function showError(message) {
+        // Создаем элемент уведомления
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+        alertDiv.innerHTML = `
+            <strong>Ошибка!</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
 
-        try {
-            const response = await fetch(`${API_BASE}/users/${userId}/role`, {
-                method: 'PUT',
-                headers: createAuthHeaders(),
-                body: JSON.stringify({ role: selectedRole })
-            });
+        // Добавляем уведомление на страницу
+        document.body.appendChild(alertDiv);
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+        // Автоматически скрываем через 5 секунд
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.parentNode.removeChild(alertDiv);
             }
-
-            const result = await response.json();
-            alert(result.message || 'Роль успешно обновлена!');
-            loadUsers();
-        } catch (error) {
-            alert('Ошибка обновления роли: ' + error.message);
-        }
-    }
-
-    async function toggleStatus(userId) {
-        try {
-            const response = await fetch(`${API_BASE}/users/${userId}/status`, {
-                method: 'PUT',
-                headers: createAuthHeaders()
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const result = await response.json();
-            alert(result.message || 'Статус пользователя изменен!');
-            loadUsers();
-        } catch (error) {
-            alert('Ошибка изменения статуса: ' + error.message);
-        }
-    }
-
-    async function deleteUser(userId) {
-        if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_BASE}/users/${userId}`, {
-                method: 'DELETE',
-                headers: createAuthHeaders()
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const result = await response.json();
-            alert(result.message || 'Пользователь удален!');
-            loadUsers();
-        } catch (error) {
-            alert('Ошибка удаления пользователя: ' + error.message);
-        }
+        }, 5000);
     }
 
     async function logout() {
-        try {
-            // Очищаем токен на клиенте
-            localStorage.removeItem('jwtToken');
-            sessionStorage.removeItem('jwtToken');
-            document.cookie = 'jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        if (!confirm('Вы уверены, что хотите выйти?')) {
+            return;
+        }
 
-            // Вызываем logout на сервере
-            await fetch('/api/auth/logout', {
+        try {
+            // Блокируем кнопку
+            const logoutBtn = document.querySelector('.logout-btn');
+            const originalText = logoutBtn.innerHTML;
+            logoutBtn.innerHTML = '<span class="loading-spinner"></span> Выход...';
+            logoutBtn.disabled = true;
+
+            // Пытаемся сделать POST запрос
+            const response = await fetch('/api/auth/logout', {
                 method: 'POST',
-                headers: createAuthHeaders()
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
             });
 
-            window.location.href = '/api/auth/login';
+            // Независимо от ответа, делаем редирект
+            console.log('Logout response status:', response.status);
+            window.location.href = '/?logout=true&t=' + Date.now();
+
         } catch (error) {
-            console.error('Logout error:', error);
-            window.location.href = '/api/auth/login';
+            console.error('Logout request failed:', error);
+            // Если запрос не удался, все равно делаем редирект
+            window.location.href = '/?logout=true&t=' + Date.now();
         }
     }
 
-    // Запускаем проверку авторизации при загрузке страницы
-    document.addEventListener('DOMContentLoaded', function() {
-        checkAuth();
-    });
+    // Автоматическое обновление статистики каждые 30 секунд
+    setInterval(loadDashboardStats, 30000);
 </script>
 </body>
 </html>

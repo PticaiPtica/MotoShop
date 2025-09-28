@@ -1,4 +1,4 @@
-package ru.academy.homework.motoshop.controlles;
+package ru.academy.homework.motoshop.controllers;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;

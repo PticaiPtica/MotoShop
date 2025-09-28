@@ -1,6 +1,10 @@
 package ru.academy.homework.motoshop.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -8,40 +12,59 @@ import java.util.Objects;
 @Entity
 @Table(name = "categories")
 public class Category {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false)
     private String name;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "image_url")
     private String imageUrl;
 
-    @Column(name = "active")
-    private boolean active;
-
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("category")
     private List<Product> products = new ArrayList<>();
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
     // Конструкторы
-    public Category() {}
+    public Category() {
+    }
 
     public Category(String name, String description) {
         this.name = name;
         this.description = description;
-
     }
 
-    public Category(Long id, String name, String description, String imageUrl, boolean active, List<Product> products) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.imageUrl = imageUrl;
-        this.active = active;
-        this.products = products;
+    // Вспомогательные методы
+    public void addProduct(Product product) {
+        products.add(product);
+        product.setCategory(this);
+    }
+
+    public void removeProduct(Product product) {
+        products.remove(product);
+        product.setCategory(null);
     }
 
     // Геттеры и сеттеры
@@ -69,6 +92,14 @@ public class Category {
         this.description = description;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public List<Product> getProducts() {
         return products;
     }
@@ -77,25 +108,28 @@ public class Category {
         this.products = products;
     }
 
-    // Вспомогательные методы для управления связью
-    public void addProduct(Product product) {
-        products.add(product);
-        product.setCategory(this);
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void removeProduct(Product product) {
-        products.remove(product);
-        product.setCategory(null);
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 
-    // Переопределенные методы
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     @Override
     public String toString() {
         return "Category{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
+                ", productsCount=" + (products != null ? products.size() : 0) +
                 '}';
     }
 
@@ -104,19 +138,11 @@ public class Category {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Category category = (Category) o;
-        return Objects.equals(id, category.id) &&
-                Objects.equals(name, category.name);
+        return Objects.equals(id, category.id) && Objects.equals(name, category.name);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, name);
-    }
-
-    public void setImageUrl(String s) {
-        this.imageUrl = s;
-    }
-    public String getImageUrl() {
-        return imageUrl;
     }
 }
